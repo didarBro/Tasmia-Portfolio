@@ -370,7 +370,7 @@ const HeroSection = () => {
               variants={itemVariants}
               className="text-4xl md:text-5xl lg:text-6xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
             >
-              Hi, I'm <span className="text-green-400">Sumon</span>
+              Hi, I'm <span className="text-green-400">Tasmia</span>
             </motion.h1>
 
             <motion.div
@@ -479,7 +479,7 @@ const HeroSection = () => {
                 {/* Replace with your image */}
                 <div className="aspect-square w-full max-w-md overflow-hidden rounded-xl">
                   <Image
-                    src="/assets/sumon.jpeg"
+                    src="/assets/Tasmia.jpeg"
                     width={400}
                     height={400}
                     alt="Sumon Developer"
