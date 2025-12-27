@@ -8,8 +8,8 @@ import ReduxProvider from "./provider/ReduxProvider";
 // const poppins = Poppins({ subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
-  title: "Sumon.DevCoder",
-  description: "The Professional Web Application Expert",
+  title: "TasmiaKhan",
+  description: "Testing software to make user experience easier",
 };
 
 export default function RootLayout({

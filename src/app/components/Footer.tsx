@@ -44,7 +44,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center pt-4">
           <div className="text-sm text-gray-400 mb-4 md:mb-0">
             &copy; {currentYear}{" "}
-            <span className="text-green-500">Sumon DevCoder</span>. All rights
+            <span className="text-green-500">TasmiaKhan</span>. All rights
             reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500">

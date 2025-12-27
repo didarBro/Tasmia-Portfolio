@@ -104,10 +104,10 @@ const ContactSection = () => {
                   <div>
                     <p className="text-gray-400 text-sm">Email</p>
                     <a
-                      href="mailto:Sumon.DevCoder@gmail.com"
+                      href="mailto:17tasmiakhan@gmail.com"
                       className="text-white font-medium hover:text-green-400 transition-colors"
                     >
-                      Sumon.DevCoder@gmail.com
+                     17tasmiakhan@gmail.com
                     </a>
                   </div>
                 </motion.div>
