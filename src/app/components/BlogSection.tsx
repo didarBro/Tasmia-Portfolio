@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, X, ExternalLink, BookOpen, Calendar, Users, Award } from "lucide-react";
 
@@ -20,6 +20,11 @@ type ResearchPaper = {
 const ResearchSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Research papers from CV
   const researchPapers: ResearchPaper[] = [
@@ -112,10 +117,23 @@ const ResearchSection: React.FC = () => {
     },
   };
 
+  if (!isMounted) {
+    return (
+      <section className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" id="research">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
       id="research"
+      suppressHydrationWarning
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
