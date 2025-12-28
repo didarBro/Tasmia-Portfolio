@@ -3,7 +3,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 
 export const metadata: Metadata = {
   title: "Dashboard - Portfolio",
-  description: "Sumon.DevCoder",
+  description: "TasmiaKhan",
 };
 
 export default function dashboardLayout({

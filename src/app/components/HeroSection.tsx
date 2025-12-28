@@ -16,11 +16,11 @@ import { motion } from "framer-motion";
 // TypeWriter component (replacing TypeText)
 const TypeWriter = () => {
   const titles = [
-    "Full Stack Developer",
-    "React & Next.js Specialist",
-    "MERN Stack Developer",
-    "Programming Enthusiast",
-  ];
+  "Software Quality Assurance Engineer",
+  "Manual & Automation Tester",
+  "Cypress Automation Tester",
+  "Playwright Automation Tester"
+]
 
   const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -384,9 +384,7 @@ const HeroSection = () => {
               variants={itemVariants}
               className="text-lg text-gray-300 leading-relaxed mb-8 max-w-2xl"
             >
-              I'm a full-stack developer & create websites that help businesses
-              grow by turning visitors into loyal customers — ideal for anyone
-              looking to expand their online presence.
+              I ensure software quality through detailed manual testing and reliable automation, helping businesses launch stable and scalable products.
             </motion.p>
 
             <motion.div
@@ -394,7 +392,7 @@ const HeroSection = () => {
               className="flex flex-wrap gap-4 mb-10"
             >
               <Link
-                href="https://drive.google.com/file/d/12kPSgIZTDIhltFvGZuQ5P1BqCbGefrBg/view?usp=sharing"
+                href="https://drive.google.com/drive/folders/1ndRPScQwzS_IWkYhL_vIXR1yXy3kHxvk?usp=drive_link"
                 target="_blank"
               >
                 <button className="group relative px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-emerald-600 hover:to-green-700 text-white font-medium rounded-lg flex items-center gap-2 shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all duration-300 overflow-hidden">
@@ -412,7 +410,7 @@ const HeroSection = () => {
 
             <motion.div variants={itemVariants} className="flex gap-4">
               <a
-                href="https://github.com/sumon-devCoder"
+                href="https://github.com/KTasmi"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 hover:from-green-400 hover:to-emerald-600 text-gray-300 hover:text-white border border-gray-600 hover:border-green-400/50 transition-all duration-300 shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1"
@@ -422,7 +420,7 @@ const HeroSection = () => {
               </a>
 
               <a
-                href="https://www.linkedin.com/in/sumon-devcoder"
+                href="https://www.linkedin.com/in/KhanTasmia/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-gray-300 hover:text-white border border-blue-500 hover:border-blue-400/50 transition-all duration-300 shadow-lg hover:shadow-blue-500/30 transform hover:-translate-y-1"
@@ -432,7 +430,7 @@ const HeroSection = () => {
               </a>
 
               <a
-                href="https://wa.me/+8801962878499"
+                href="https://wa.me/+8801621296671"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-gray-300 hover:text-white border border-green-600 hover:border-green-500/50 transition-all duration-300 shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1"
@@ -442,7 +440,7 @@ const HeroSection = () => {
               </a>
 
               <a
-                href="https://facebook.com/sumon.devCoder"
+                href="https://www.facebook.com/share/1CsxTi79hD/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-gray-300 hover:text-white border border-blue-600 hover:border-blue-500/50 transition-all duration-300 shadow-lg hover:shadow-blue-600/30 transform hover:-translate-y-1"
@@ -451,7 +449,7 @@ const HeroSection = () => {
                 <FaFacebook className="text-xl transition-transform duration-300 hover:scale-110" />
               </a>
 
-              <a
+               {/* <a
                 href="https://instagram.com/sumon.devcoder"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -459,7 +457,7 @@ const HeroSection = () => {
                 aria-label="Instagram"
               >
                 <FaInstagram className="text-xl transition-transform duration-300 hover:scale-110" />
-              </a>
+              </a> */}
             </motion.div>
           </motion.div>
 
@@ -479,10 +477,10 @@ const HeroSection = () => {
                 {/* Replace with your image */}
                 <div className="aspect-square w-full max-w-md overflow-hidden rounded-xl">
                   <Image
-                    src="/assets/Tasmia.jpeg"
+                    src="/assets/Tasmia1.jpg"
                     width={400}
                     height={400}
-                    alt="Sumon Developer"
+                    alt="TasmiaKhan"
                     className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
                   />
                 </div>
