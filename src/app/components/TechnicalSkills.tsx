@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useGetSkillsQuery } from "@/redux/features/skills/skillsApi";
 import DynamicLoading from "./DynamicLoading";
 
-// type
+// Define proper types
 export type TSkills = {
   _id: string;
   name: string;
@@ -15,10 +15,20 @@ export type TSkills = {
   img: string;
 };
 
+type TDisplaySkill = {
+  _id?: string;
+  name: string;
+  level: number;
+  img?: string;
+  category?: string;
+};
+
+type TSkillCategory = "all" | "automation" | "manual-testing" | "programming" | "tools-platforms" | "performance-security";
+
 const TechnicalSkills = () => {
   const { data, isLoading } = useGetSkillsQuery({});
   const skillsData = data?.data?.result;
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<TSkillCategory>("all");
   const [mounted, setMounted] = useState(false);
 
   // Fix: Wait for component to mount on client before rendering
@@ -27,7 +37,7 @@ const TechnicalSkills = () => {
   }, []);
 
   // Updated categories to match SQA/Testing focus from CV
-  const categories = [
+  const categories: TSkillCategory[] = [
     "all",
     "automation",
     "manual-testing",
@@ -37,7 +47,7 @@ const TechnicalSkills = () => {
   ];
 
   // Categorize skills based on SQA/Testing focus
-  const getSkillCategory = (skillName: string) => {
+  const getSkillCategory = (skillName: string): TSkillCategory => {
     const automationSkills = [
       "Cypress",
       "Playwright",
@@ -119,8 +129,8 @@ const TechnicalSkills = () => {
   });
 
   // Function to format category display names
-  const formatCategoryName = (category: string) => {
-    const names: Record<string, string> = {
+  const formatCategoryName = (category: TSkillCategory): string => {
+    const names: Record<TSkillCategory, string> = {
       "all": "All Skills",
       "automation": "Automation Testing",
       "manual-testing": "Manual Testing",
@@ -128,37 +138,45 @@ const TechnicalSkills = () => {
       "tools-platforms": "Tools & Platforms",
       "performance-security": "Performance & Security"
     };
-    return names[category] || category.charAt(0).toUpperCase() + category.slice(1);
+    return names[category];
   };
 
-  // Example skills data structure if you want to predefine some SQA skills
-  const defaultSqaSkills = [
-    { name: "Cypress", level: 85, category: "automation" },
-    { name: "Playwright", level: 80, category: "automation" },
-    { name: "Manual Testing", level: 90, category: "manual-testing" },
-    { name: "Test Case Design", level: 88, category: "manual-testing" },
-    { name: "JavaScript", level: 75, category: "programming" },
-    { name: "Python", level: 70, category: "programming" },
-    { name: "Postman", level: 85, category: "tools-platforms" },
-    { name: "JMeter", level: 75, category: "performance-security" },
-    { name: "Jira", level: 90, category: "tools-platforms" },
-    { name: "TestRail", level: 80, category: "tools-platforms" },
-    { name: "API Testing", level: 85, category: "automation" },
-    { name: "Java", level: 65, category: "programming" },
-    { name: "MySQL", level: 70, category: "tools-platforms" },
-    { name: "PostgreSQL", level: 72, category: "tools-platforms" },
-    { name: "GitHub", level: 85, category: "tools-platforms" },
-    { name: "OWASP ZAP", level: 60, category: "performance-security" },
-    { name: "Performance Testing", level: 75, category: "performance-security" },
-    { name: "JEST", level: 70, category: "automation" },
-    { name: "Pytest", level: 68, category: "automation" },
-    { name: "Load Testing", level: 78, category: "performance-security" }
+  // Example skills data structure with proper types
+  const defaultSqaSkills: TDisplaySkill[] = [
+    { _id: "1", name: "Cypress", level: 85, category: "automation" },
+    { _id: "2", name: "Playwright", level: 80, category: "automation" },
+    { _id: "3", name: "Manual Testing", level: 90, category: "manual-testing" },
+    { _id: "4", name: "Test Case Design", level: 88, category: "manual-testing" },
+    { _id: "5", name: "JavaScript", level: 75, category: "programming" },
+    { _id: "6", name: "Python", level: 70, category: "programming" },
+    { _id: "7", name: "Postman", level: 85, category: "tools-platforms" },
+    { _id: "8", name: "JMeter", level: 75, category: "performance-security" },
+    { _id: "9", name: "Jira", level: 90, category: "tools-platforms" },
+    { _id: "10", name: "TestRail", level: 80, category: "tools-platforms" },
+    { _id: "11", name: "API Testing", level: 85, category: "automation" },
+    { _id: "12", name: "Java", level: 65, category: "programming" },
+    { _id: "13", name: "MySQL", level: 70, category: "tools-platforms" },
+    { _id: "14", name: "PostgreSQL", level: 72, category: "tools-platforms" },
+    { _id: "15", name: "GitHub", level: 85, category: "tools-platforms" },
+    { _id: "16", name: "OWASP ZAP", level: 60, category: "performance-security" },
+    { _id: "17", name: "Performance Testing", level: 75, category: "performance-security" },
+    { _id: "18", name: "JEST", level: 70, category: "automation" },
+    { _id: "19", name: "Pytest", level: 68, category: "automation" },
+    { _id: "20", name: "Load Testing", level: 78, category: "performance-security" }
   ];
 
   // Use API data if available, otherwise use default SQA skills for demo
-  const displaySkills = skillsData?.length > 0 ? filteredSkills : defaultSqaSkills.filter(skill => 
-    activeTab === "all" || skill.category === activeTab
-  );
+  const displaySkills: TDisplaySkill[] = skillsData?.length > 0 ? 
+    (filteredSkills?.map((skill: TSkills) => ({
+      _id: skill._id,
+      name: skill.name,
+      level: skill.level,
+      img: skill.img,
+      category: getSkillCategory(skill.name)
+    })) || []) : 
+    defaultSqaSkills.filter(skill => 
+      activeTab === "all" || skill.category === activeTab
+    );
 
   // Don't render animations until client-side
   if (!mounted) {
@@ -231,7 +249,7 @@ const TechnicalSkills = () => {
 
         {/* Skills Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {displaySkills?.map((skill: any, index: number) => (
+          {displaySkills?.map((skill: TDisplaySkill, index: number) => (
             <motion.div
               key={skill._id || skill.name}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -265,7 +283,7 @@ const TechnicalSkills = () => {
                         {skill.name}
                       </h3>
                       <span className="text-xs text-gray-400">
-                        {getSkillCategory(skill.name)}
+                        {skill.category || getSkillCategory(skill.name)}
                       </span>
                     </div>
                   </div>
@@ -336,15 +354,14 @@ const TechnicalSkills = () => {
           {[
             { 
               label: "Testing Tools", 
-              value: displaySkills?.filter((s: any) => 
-                getSkillCategory(s.name) === "automation" || 
-                getSkillCategory(s.name) === "manual-testing" ||
-                getSkillCategory(s.name) === "performance-security"
+              value: displaySkills?.filter((s: TDisplaySkill) => 
+                (s.category === "automation" || s.category === "manual-testing" || s.category === "performance-security") ||
+                (!s.category && (getSkillCategory(s.name) === "automation" || getSkillCategory(s.name) === "manual-testing" || getSkillCategory(s.name) === "performance-security"))
               ).length || 0 
             },
             {
               label: "Expert Level",
-              value: displaySkills?.filter((s: any) => s.level >= 80).length || 0,
+              value: displaySkills?.filter((s: TDisplaySkill) => s.level >= 80).length || 0,
             },
             {
               label: "Projects Tested",
@@ -374,7 +391,7 @@ const TechnicalSkills = () => {
 };
 
 // Utility functions
-function getLevelLabel(level: number) {
+function getLevelLabel(level: number): string {
   if (level >= 90) return "Expert";
   if (level >= 80) return "Advanced";
   if (level >= 70) return "Proficient";
@@ -382,7 +399,7 @@ function getLevelLabel(level: number) {
   return "Learning";
 }
 
-function getLevelBadgeColor(level: number) {
+function getLevelBadgeColor(level: number): string {
   if (level >= 90) return "bg-gradient-to-r from-green-900 to-green-800 text-green-100";
   if (level >= 80) return "bg-gradient-to-r from-emerald-900 to-emerald-800 text-emerald-100";
   if (level >= 70) return "bg-gradient-to-r from-teal-900 to-teal-800 text-teal-100";
@@ -390,7 +407,7 @@ function getLevelBadgeColor(level: number) {
   return "bg-gradient-to-r from-gray-800 to-gray-700 text-gray-300";
 }
 
-function getProgressBarColor(level: number) {
+function getProgressBarColor(level: number): string {
   if (level >= 90) return "bg-gradient-to-r from-green-500 to-green-400";
   if (level >= 80) return "bg-gradient-to-r from-emerald-500 to-emerald-400";
   if (level >= 70) return "bg-gradient-to-r from-teal-500 to-teal-400";
@@ -398,7 +415,7 @@ function getProgressBarColor(level: number) {
   return "bg-gradient-to-r from-gray-600 to-gray-500";
 }
 
-function getExperienceText(level: number) {
+function getExperienceText(level: number): string {
   if (level >= 90) return "3+ years experience";
   if (level >= 80) return "2-3 years experience";
   if (level >= 70) return "1-2 years experience";

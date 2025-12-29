@@ -6,7 +6,6 @@ import {
   FaGithub,
   FaLinkedin,
   FaFacebook,
-  FaInstagram,
   FaWhatsapp,
 } from "react-icons/fa";
 import Image from "next/image";

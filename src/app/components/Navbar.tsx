@@ -104,7 +104,7 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []); // Empty dependency array = run only on mount
+  }, [activeSection]); // Added activeSection as dependency
 
   const navLinks = [
     { href: "#home", label: "Home" },

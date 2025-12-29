@@ -9,7 +9,7 @@ const BlogList = () => {
 
   return (
     <section className="py-16" id="blogs">
-      <div className="container mx-auto px-4">
+      {/* <div className="container mx-auto px-4">
         <h2 className="text-3xl font-semibold text-center mb-8">
           Latest Blog Posts
         </h2>
@@ -18,7 +18,7 @@ const BlogList = () => {
             <BlogCard key={blog?._id} {...blog} />
           ))}
         </div>
-      </div>
+      </div> */}
     </section>
   );
 };
