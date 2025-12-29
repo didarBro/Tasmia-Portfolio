@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useGetblogQuery } from "@/redux/features/blog/blogApi";
-import BlogCard, { BlogCardProps } from "../components/BlogCard";
+// import { useGetblogQuery } from "@/redux/features/blog/blogApi";
+// import BlogCard, { BlogCardProps } from "../components/BlogCard";
 
 const BlogList = () => {
-  const { data } = useGetblogQuery({});
-  const BlogData = data?.data?.result || [];
+  // const { data } = useGetblogQuery({});
+  // const BlogData = data?.data?.result || [];
 
   return (
     <section className="py-16" id="blogs">
