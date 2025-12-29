@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Search, X, ExternalLink, BookOpen, Calendar, Users, Award } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, ExternalLink, BookOpen, Calendar, Users, Award, ChevronDown, ChevronUp } from "lucide-react";
 
 type ResearchPaper = {
   id: string;
@@ -21,6 +21,7 @@ const ResearchSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [isMounted, setIsMounted] = useState(false);
+  const [expandedPaper, setExpandedPaper] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -36,7 +37,7 @@ const ResearchSection: React.FC = () => {
       year: "2024",
       description: "A comprehensive study on deep learning-based models for detecting crop pest diseases, encompassing application, dataset analysis, state-of-the-art results, challenges, and future research directions.",
       doi: "10.xxxx/xxxxx",
-      doiUrl: "#", // Replace with actual DOI URL
+      doiUrl: "#",
       tags: ["Deep Learning", "Agriculture", "Computer Vision", "CNN", "Pest Detection"],
       category: "Machine Learning",
       abstract: "This research presents a DL-based model for crop pest disease detection, utilizing advanced neural networks to analyze agricultural imaging data. The study encompasses comprehensive dataset analysis, implementation of state-of-the-art deep learning architectures, and evaluation of detection accuracy across multiple crop types and pest species.",
@@ -54,7 +55,7 @@ const ResearchSection: React.FC = () => {
       year: "2024",
       description: "An innovative hybrid architecture combining Convolutional Neural Networks (CNNs) and Vision Transformers (ViTs) for early cancer diagnosis, with explainable AI capabilities for enhanced interpretability.",
       doi: "10.xxxx/xxxxx",
-      doiUrl: "#", // Replace with actual DOI URL
+      doiUrl: "#",
       tags: ["CNN", "Vision Transformer", "Medical AI", "Cancer Detection", "Explainable AI", "Healthcare"],
       category: "Medical AI",
       abstract: "This groundbreaking research introduces a hybrid CNN-ViT architecture specifically designed for early cancer diagnosis through medical imaging analysis. The proposed model was rigorously evaluated on the HAM10000 and Melanoma Skin Cancer datasets, achieving state-of-the-art performance across multiple evaluation metrics including accuracy, precision, recall, and F1-score.",
@@ -73,7 +74,7 @@ const ResearchSection: React.FC = () => {
       year: "2024",
       description: "A machine learning-based approach to predict earthquakes by analyzing seismic event patterns, contributing to improved disaster preparedness and response mechanisms.",
       doi: "10.xxxx/xxxxx",
-      doiUrl: "#", // Replace with actual DOI URL
+      doiUrl: "#",
       tags: ["Machine Learning", "Earthquake Prediction", "Disaster Management", "Pattern Recognition", "Seismology"],
       category: "Disaster Management",
       abstract: "This research leverages multiple machine learning-based models to predict earthquakes by identifying and analyzing patterns in seismic events. The study explores various algorithms including neural networks, decision trees, and ensemble methods to enhance earthquake prediction accuracy and improve emergency response systems.",
@@ -97,6 +98,10 @@ const ResearchSection: React.FC = () => {
 
     return matchesSearch && matchesCategory;
   });
+
+  const toggleExpand = (paperId: string) => {
+    setExpandedPaper(expandedPaper === paperId ? null : paperId);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -207,20 +212,20 @@ const ResearchSection: React.FC = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="space-y-8"
+            className="space-y-6"
           >
             {filteredPapers.map((paper) => (
               <motion.div
                 key={paper.id}
                 variants={itemVariants}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -3 }}
                 className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 hover:border-green-500/50 overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-green-500/10 transition-all duration-300"
               >
-                <div className="p-6 md:p-8">
-                  {/* Header */}
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                {/* Compact Card View */}
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-2">
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-500/20 to-blue-500/20 text-green-400 border border-green-500/30">
                           {paper.category}
                         </span>
@@ -229,114 +234,143 @@ const ResearchSection: React.FC = () => {
                           {paper.year}
                         </span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl font-bold text-white mb-3 leading-tight">
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight">
                         {paper.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
+                      <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
                         <Users size={16} />
                         <span>{paper.authors.join(", ")}</span>
                       </div>
-                      <p className="text-blue-400 font-medium mb-2">
-                        {paper.journal}
+                      <p className="text-gray-300 text-sm line-clamp-2">
+                        {paper.description}
                       </p>
                     </div>
 
-                    {/* DOI Badge */}
-                    <a
-                      href={paper.doiUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors group h-fit"
+                    <button
+                      onClick={() => toggleExpand(paper.id)}
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/30 whitespace-nowrap"
                     >
-                      <BookOpen className="text-green-400" size={20} />
-                      <span className="text-white text-sm font-medium">View DOI</span>
-                      <ExternalLink
-                        className="text-gray-400 group-hover:text-white transition-colors"
-                        size={16}
-                      />
-                    </a>
+                      <BookOpen size={18} />
+                      <span>View Details</span>
+                      {expandedPaper === paper.id ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </button>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-gray-300 mb-4 leading-relaxed">
-                    {paper.description}
-                  </p>
-
-                  {/* Abstract */}
-                  <div className="bg-gray-900/50 rounded-lg p-4 mb-4 border-l-4 border-green-500">
-                    <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                      <BookOpen size={18} className="text-green-400" />
-                      Abstract
-                    </h4>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      {paper.abstract}
-                    </p>
-                  </div>
-
-                  {/* Achievements */}
-                  {paper.achievements && paper.achievements.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        <Award size={18} className="text-blue-400" />
-                        Key Achievements
-                      </h4>
-                      <ul className="grid md:grid-cols-2 gap-2">
-                        {paper.achievements.map((achievement, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-start gap-2 text-gray-300 text-sm"
-                          >
-                            <span className="text-green-400 mt-1">✓</span>
-                            <span>{achievement}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {paper.tags.map((tag, idx) => (
+                  {/* Tags in compact view */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {paper.tags.slice(0, 4).map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-3 py-1 bg-gray-700/50 text-gray-300 text-xs rounded-full border border-gray-600 hover:border-green-500/50 transition-colors"
+                        className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded-full border border-gray-600"
                       >
                         #{tag}
                       </span>
                     ))}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-700">
-                    <a
-                      href={paper.doiUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/30"
-                    >
-                      <ExternalLink size={16} />
-                      Read Full Paper
-                    </a>
-                    <a
-                      href="#"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                    >
-                      <Search size={16} />
-                      Google Scholar
-                    </a>
-                    <a
-                      href="#"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                    >
-                      <BookOpen size={16} />
-                      ResearchGate
-                    </a>
+                    {paper.tags.length > 4 && (
+                      <span className="px-2 py-1 text-gray-400 text-xs">
+                        +{paper.tags.length - 4} more
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {/* Expanded Details */}
+                <AnimatePresence>
+                  {expandedPaper === paper.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 border-t border-gray-700 pt-6">
+                        <p className="text-blue-400 font-medium mb-4">
+                          {paper.journal}
+                        </p>
+
+                        {/* Abstract */}
+                        <div className="bg-gray-900/50 rounded-lg p-4 mb-4 border-l-4 border-green-500">
+                          <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                            <BookOpen size={18} className="text-green-400" />
+                            Abstract
+                          </h4>
+                          <p className="text-gray-400 text-sm leading-relaxed">
+                            {paper.abstract}
+                          </p>
+                        </div>
+
+                        {/* Achievements */}
+                        {paper.achievements && paper.achievements.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                              <Award size={18} className="text-blue-400" />
+                              Key Achievements
+                            </h4>
+                            <ul className="grid md:grid-cols-2 gap-2">
+                              {paper.achievements.map((achievement, idx) => (
+                                <li
+                                  key={idx}
+                                  className="flex items-start gap-2 text-gray-300 text-sm"
+                                >
+                                  <span className="text-green-400 mt-1">✓</span>
+                                  <span>{achievement}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* All Tags */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {paper.tags.map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="px-3 py-1 bg-gray-700/50 text-gray-300 text-xs rounded-full border border-gray-600 hover:border-green-500/50 transition-colors"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-700">
+                          <a
+                            href={paper.doiUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/30"
+                          >
+                            <ExternalLink size={16} />
+                            Read Full Paper
+                          </a>
+                          <a
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                          >
+                            <Search size={16} />
+                            Google Scholar
+                          </a>
+                          <a
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                          >
+                            <BookOpen size={16} />
+                            ResearchGate
+                          </a>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
           </motion.div>
