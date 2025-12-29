@@ -15,11 +15,11 @@ import { motion } from "framer-motion";
 // TypeWriter component (replacing TypeText)
 const TypeWriter = () => {
   const titles = [
-  "Software Quality Assurance Engineer",
-  "Manual & Automation Tester",
-  "Cypress Automation Tester",
-  "Playwright Automation Tester"
-]
+    "Software Quality Assurance Engineer",
+    "Manual & Automation Tester",
+    "Cypress Automation Tester",
+    "Playwright Automation Tester"
+  ];
 
   const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -210,7 +210,38 @@ const MatrixRain = () => {
   );
 };
 
+// New component: Glowing dots around the image
+const GlowingOrbitDots = () => {
+  return (
+    <>
+      {[0, 1, 2].map((orbit) => (
+        <div key={orbit} className="absolute inset-0">
+          {Array.from({ length: 8 }).map((_, dotIndex) => (
+            <motion.div
+              key={dotIndex}
+              className="absolute w-2 h-2 bg-green-400 rounded-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: dotIndex * 0.4 + orbit * 1,
+              }}
+              style={{
+                left: `calc(50% + ${70 + orbit * 20}px * cos(${dotIndex * 45}deg))`,
+                top: `calc(50% + ${70 + orbit * 20}px * sin(${dotIndex * 45}deg))`,
+              }}
+            />
+          ))}
+        </div>
+      ))}
+    </>
+  );
+};
+
 const HeroSection = () => {
+  const [isHovering, setIsHovering] = useState(false);
+  
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -233,17 +264,54 @@ const HeroSection = () => {
   };
 
   const imageVariants = {
-    hidden: { scale: 0.8, opacity: 0 },
+    hidden: { scale: 0.8, opacity: 0, rotateY: -30 },
     visible: {
       scale: 1,
       opacity: 1,
+      rotateY: 0,
       transition: {
         type: "spring",
         stiffness: 100,
-        duration: 0.8,
+        damping: 15,
+        duration: 1,
+      },
+    },
+    hover: {
+      scale: 1.05,
+      rotateY: 5,
+      boxShadow: "0 25px 50px -12px rgba(34, 197, 94, 0.5)",
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 20,
       },
     },
   };
+
+  const techBubbleVariants = {
+    hidden: { scale: 0, opacity: 0 },
+    visible: (i: number) => ({
+      scale: 1,
+      opacity: 1,
+      transition: {
+        delay: 1.5 + i * 0.2,
+        type: "spring",
+        stiffness: 200,
+        damping: 15,
+      },
+    }),
+    hover: {
+      y: -5,
+      boxShadow: "0 10px 25px rgba(34, 197, 94, 0.3)",
+    },
+  };
+
+  const techBubbles = [
+    { text: "Cypress", color: "border-green-400 bg-green-400/10" },
+    { text: "Playwright", color: "border-blue-400 bg-blue-400/10" },
+    { text: "Selenium", color: "border-yellow-400 bg-yellow-400/10" },
+    { text: "Jest", color: "border-purple-400 bg-purple-400/10" },
+  ];
 
   return (
     <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
@@ -306,6 +374,22 @@ const HeroSection = () => {
             d: "M0,40 Q25,60 50,40 T100,40";
           }
         }
+        @keyframes glowPulse {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.6);
+          }
+        }
+        @keyframes scanLine {
+          0% {
+            transform: translateY(-100%);
+          }
+          100% {
+            transform: translateY(400%);
+          }
+        }
         .animate-wave1 {
           animation: wave1 12s ease-in-out infinite;
         }
@@ -314,6 +398,12 @@ const HeroSection = () => {
         }
         .animate-wave3 {
           animation: wave3 15s ease-in-out infinite;
+        }
+        .animate-glow-pulse {
+          animation: glowPulse 3s ease-in-out infinite;
+        }
+        .animate-scan-line {
+          animation: scanLine 4s linear infinite;
         }
       `}</style>
 
@@ -447,43 +537,102 @@ const HeroSection = () => {
               >
                 <FaFacebook className="text-xl transition-transform duration-300 hover:scale-110" />
               </a>
-
-               {/* <a
-                href="https://instagram.com/sumon.devcoder"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-gray-300 hover:text-white border border-pink-600 hover:border-pink-500/50 transition-all duration-300 shadow-lg hover:shadow-pink-500/30 transform hover:-translate-y-1"
-                aria-label="Instagram"
-              >
-                <FaInstagram className="text-xl transition-transform duration-300 hover:scale-110" />
-              </a> */}
             </motion.div>
           </motion.div>
 
-          {/* Right image area */}
+          {/* Right image area - Clean and Professional */}
           <motion.div
-            className="w-full md:w-2/5 flex justify-center mt-16 md:mt-0"
-            variants={imageVariants}
-            initial="hidden"
-            animate="visible"
+            className="w-full md:w-2/5 flex justify-center mt-16 md:mt-0 relative"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
           >
-            <div className="relative">
-              {/* Animated border effect */}
-              <div className="absolute  inset-0 rounded-2xl bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 blur-md opacity-70 animate-pulse"></div>
+            <div className="relative group">
+              {/* Outer glow ring */}
+              <motion.div
+                className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 opacity-30 blur-xl"
+                animate={{
+                  scale: isHovering ? 1.1 : 1,
+                  rotate: isHovering ? 5 : 0,
+                }}
+                transition={{ type: "spring", stiffness: 200 }}
+              />
+
+              {/* Pulsing rings */}
+              <div className="absolute -inset-4 rounded-3xl border-2 border-green-400/30 animate-glow-pulse" />
+              
+              {/* Scanning line effect */}
+              {isHovering && (
+                <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent animate-scan-line" />
+                </div>
+              )}
 
               {/* Image container */}
-              <div className="relative bg-gray-900 p-2 rounded-2xl overflow-hidden">
-                {/* Replace with your image */}
-                <div className="aspect-square w-full max-w-md overflow-hidden rounded-xl">
+              <motion.div
+                className="relative bg-gradient-to-br from-gray-800 to-gray-900 p-3 rounded-2xl overflow-hidden shadow-2xl"
+                variants={imageVariants}
+                initial="hidden"
+                animate="visible"
+                whileHover="hover"
+              >
+                {/* Corner accent elements */}
+                <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-green-400 rounded-tl-xl" />
+                <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-green-400 rounded-tr-xl" />
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-green-400 rounded-bl-xl" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-green-400 rounded-br-xl" />
+
+                {/* Glowing orbit dots - subtle professional effect */}
+                <GlowingOrbitDots />
+
+                {/* Image with enhanced styling */}
+                <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-xl bg-gradient-to-br from-gray-700 to-gray-800">
                   <Image
                     src="/assets/Tasmia1.jpg"
                     width={400}
                     height={400}
-                    alt="TasmiaKhan"
-                    className="object-cover w-full h-full hover:scale-105 transition-transform duration-500"
+                    alt="Tasmia Khan - QA Engineer"
+                    className="object-cover w-full h-full transition-all duration-700 group-hover:scale-105 group-hover:brightness-110"
+                    priority
                   />
+                  
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-              </div>
+
+                {/* Tech bubbles floating around - subtle and professional */}
+                <div className="absolute -top-4 -right-4">
+                  {techBubbles.map((bubble, i) => (
+                    <motion.div
+                      key={bubble.text}
+                      className={`absolute px-3 py-1 text-xs font-medium rounded-full border ${bubble.color} backdrop-blur-sm`}
+                      custom={i}
+                      variants={techBubbleVariants}
+                      initial="hidden"
+                      animate="visible"
+                      whileHover="hover"
+                      style={{
+                        left: `${i * 20}px`,
+                        top: `${i * 5}px`,
+                      }}
+                    >
+                      {bubble.text}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Professional title badge */}
+              <motion.div
+                className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700 rounded-full shadow-lg backdrop-blur-sm"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1, duration: 0.5 }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-gray-300">QA Specialist</span>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
