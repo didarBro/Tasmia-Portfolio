@@ -2,8 +2,9 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
+import Image from "next/image";
 
 // Define proper types
 export type TSkills = {
@@ -209,7 +210,7 @@ const TechnicalSkills = () => {
         type: "spring",
         stiffness: 100,
         damping: 15,
-        delay: index * 0.08, // Stagger based on index
+        delay: index * 0.08,
       },
     }),
     hover: {
@@ -459,12 +460,12 @@ const SkillCard = ({
               >
                 <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-2 flex items-center justify-center border border-gray-600/50 group-hover:border-green-500/50 transition-colors duration-300">
                   {skill.img ? (
-                    <motion.img
+                    <Image
                       src={skill.img}
                       alt={skill.name}
+                      width={48}
+                      height={48}
                       className="w-full h-full object-contain"
-                      loading="lazy"
-                      whileHover={{ scale: 1.1 }}
                     />
                   ) : (
                     <span className="text-green-400 font-bold text-xl">
@@ -589,7 +590,7 @@ const SkillCard = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center text-gray-400 text-sm">
               <motion.svg
                 className="w-4 h-4 mr-2 text-green-500"
