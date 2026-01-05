@@ -491,10 +491,7 @@ const HeroSection = () => {
                 </button>
               </Link>
 
-              <button className="relative px-[53px] py-2 border-2 border-gray-700 text-gray-300 font-medium rounded-lg overflow-hidden group hover:text-white transition-all duration-300 hover:border-none hover:shadow-[0_0_15px_2px_rgba(34,197,94,0.5)] active:scale-95">
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-500 to-green-700 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out"></span>
-                <span className="relative z-10">View Projects</span>
-              </button>
+              
             </motion.div>
 
             <motion.div variants={itemVariants} className="flex gap-4">
@@ -587,7 +584,7 @@ const HeroSection = () => {
                 {/* Image with enhanced styling */}
                 <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-xl bg-gradient-to-br from-gray-700 to-gray-800">
                   <Image
-                    src="/assets/Tasmia1.jpg"
+                    src="/assets/tasmiaGreenBG.png"
                     width={400}
                     height={400}
                     alt="Tasmia Khan - QA Engineer"
