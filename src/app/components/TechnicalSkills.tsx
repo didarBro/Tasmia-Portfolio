@@ -46,7 +46,7 @@ const TechnicalSkills = () => {
       _id: "4",
       name: "Test Case Design",
       level: 88,
-      img: "/images/Tasmia.jpeg",
+      img: "/images/test-case.png",
     },
     { _id: "5", name: "JavaScript", level: 75, img: "/images/javascript.png" },
     { _id: "6", name: "Python", level: 70, img: "/images/python.png" },
@@ -439,12 +439,12 @@ const SkillCard = ({
         />
       )}
 
-      <div className="relative bg-gray-800/80 backdrop-blur-lg rounded-xl overflow-hidden border border-gray-700/50 group-hover:border-green-500/50 transition-all duration-300">
+      <div className="relative bg-gray-800/80 backdrop-blur-lg rounded-xl overflow-hidden border border-gray-700/50 group-hover:border-green-500/50 transition-all duration-300 h-full flex flex-col">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
         </div>
 
-        <div className="relative p-6">
+        <div className="relative p-6 flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <motion.div
@@ -500,7 +500,7 @@ const SkillCard = ({
               </motion.div>
 
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-green-300 transition-colors duration-300">
+                <h3 className="text-lg font-bold text-white group-hover:text-green-300 transition-colors duration-300 line-clamp-2 min-h-[3.5rem]">
                   {skill.name}
                 </h3>
                 <span className="text-xs text-gray-400">
@@ -537,7 +537,7 @@ const SkillCard = ({
             </motion.span>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-gray-300">
                 Proficiency
