@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, Variants } from "framer-motion";
 import Image from "next/image";
 
 // Define proper types
@@ -30,13 +30,25 @@ type TSkillCategory =
   | "tools-platforms"
   | "performance-security";
 
+// Define types for SkillCard props
+type TSkillCardProps = {
+  skill: TDisplaySkill;
+  index: number;
+  isExpert: boolean;
+  isAdvanced: boolean;
+  hoveredSkill: string | null;
+  setHoveredSkill: (skillId: string | null) => void;
+  cardVariants: Variants;
+  progressBarVariants: Variants;
+  getSkillCategory: (skillName: string) => TSkillCategory;
+};
+
 const TechnicalSkills = () => {
   const [activeTab, setActiveTab] = useState<TSkillCategory>("all");
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   
   // Ref for scroll animation
   const containerRef = useRef(null);
-  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
   // Static skills data
   const staticSkillsData: TSkills[] = [
@@ -194,7 +206,7 @@ const TechnicalSkills = () => {
   );
 
   // Enhanced card animation with scroll detection
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: {
       opacity: 0,
       y: 60,
@@ -225,7 +237,7 @@ const TechnicalSkills = () => {
     },
   };
 
-  const progressBarVariants = {
+  const progressBarVariants: Variants = {
     hidden: { width: 0 },
     visible: (level: number) => ({
       width: `${level}%`,
@@ -306,6 +318,9 @@ const TechnicalSkills = () => {
             <motion.div
               key={activeTab}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
             >
               {displaySkills.map((skill: TDisplaySkill, index: number) => {
                 const isExpert = skill.level >= 90;
@@ -334,8 +349,7 @@ const TechnicalSkills = () => {
         <motion.div
           className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           {[
@@ -368,8 +382,7 @@ const TechnicalSkills = () => {
               className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-5 text-center border-l-4 border-green-500 hover:bg-gray-800 transition-colors duration-300"
               whileHover={{ y: -5 }}
               initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.1 }}
             >
               <h4 className="text-3xl font-bold text-white mb-1">
@@ -385,7 +398,7 @@ const TechnicalSkills = () => {
 };
 
 // Separate SkillCard component for individual scroll animation
-const SkillCard = ({
+const SkillCard: React.FC<TSkillCardProps> = ({
   skill,
   index,
   isExpert,
@@ -395,9 +408,9 @@ const SkillCard = ({
   cardVariants,
   progressBarVariants,
   getSkillCategory,
-}: any) => {
+}) => {
   const cardRef = useRef(null);
-  const isInView = useInView(cardRef, { once: true, margin: "-50px" });
+  const cardInView = useInView(cardRef, { once: true, margin: "-50px" });
 
   return (
     <motion.div
@@ -405,7 +418,7 @@ const SkillCard = ({
       custom={index}
       variants={cardVariants}
       initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      animate={cardInView ? "visible" : "hidden"}
       whileHover="hover"
       onMouseEnter={() => setHoveredSkill(skill._id || skill.name)}
       onMouseLeave={() => setHoveredSkill(null)}
@@ -556,7 +569,7 @@ const SkillCard = ({
                 <motion.span
                   className="text-sm font-bold text-green-400"
                   initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                  animate={cardInView ? { opacity: 1 } : { opacity: 0 }}
                   transition={{ delay: 0.8 }}
                 >
                   {skill.level}%
@@ -572,7 +585,7 @@ const SkillCard = ({
                 variants={progressBarVariants}
                 custom={skill.level}
                 initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
+                animate={cardInView ? "visible" : "hidden"}
               >
                 <motion.div
                   className="absolute top-0 left-0 h-full w-8 bg-gradient-to-r from-transparent via-white/30 to-transparent"
