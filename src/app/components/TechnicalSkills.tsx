@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useInView, Variants } from "framer-motion";
+import Image from "next/image";
 
 // Define proper types
 export type TSkills = {
@@ -47,7 +48,6 @@ const TechnicalSkills = () => {
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null);
   
   // Refs for scroll animation
-  const containerRef = useRef<HTMLDivElement>(null);
   const skillsContainerRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
   
@@ -652,7 +652,7 @@ const SkillCard: React.FC<TSkillCardProps> = ({
                 <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-2 flex items-center justify-center border border-gray-600/50 group-hover:border-green-500/50 transition-colors duration-300">
                   {skill.img ? (
                     <div className="relative w-8 h-8">
-                      <img
+                      <Image
                         src={skill.img}
                         alt={skill.name}
                         className="w-full h-full object-contain"

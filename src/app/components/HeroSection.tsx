@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { ShieldCheck } from "lucide-react";
 
 // TypeWriter component (replacing TypeText)
 const TypeWriter = () => {
@@ -18,7 +19,7 @@ const TypeWriter = () => {
     "Software Quality Assurance Engineer",
     "Manual & Automation Tester",
     "Cypress Automation Tester",
-    "Playwright Automation Tester"
+    "Playwright Automation Tester",
   ];
 
   const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
@@ -228,8 +229,12 @@ const GlowingOrbitDots = () => {
                 delay: dotIndex * 0.4 + orbit * 1,
               }}
               style={{
-                left: `calc(50% + ${70 + orbit * 20}px * cos(${dotIndex * 45}deg))`,
-                top: `calc(50% + ${70 + orbit * 20}px * sin(${dotIndex * 45}deg))`,
+                left: `calc(50% + ${70 + orbit * 20}px * cos(${
+                  dotIndex * 45
+                }deg))`,
+                top: `calc(50% + ${70 + orbit * 20}px * sin(${
+                  dotIndex * 45
+                }deg))`,
               }}
             />
           ))}
@@ -241,7 +246,7 @@ const GlowingOrbitDots = () => {
 
 const HeroSection = () => {
   const [isHovering, setIsHovering] = useState(false);
-  
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -313,6 +318,11 @@ const HeroSection = () => {
     { text: "Jest", color: "border-purple-400 bg-purple-400/10" },
   ];
 
+  // Define the cert object that was missing
+  const cert = {
+    title: "QA Engineer"
+  };
+
   return (
     <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
       {/* New advanced background animations */}
@@ -375,7 +385,8 @@ const HeroSection = () => {
           }
         }
         @keyframes glowPulse {
-          0%, 100% {
+          0%,
+          100% {
             box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
           }
           50% {
@@ -388,6 +399,14 @@ const HeroSection = () => {
           }
           100% {
             transform: translateY(400%);
+          }
+        }
+        @keyframes shine {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
           }
         }
         .animate-wave1 {
@@ -473,7 +492,9 @@ const HeroSection = () => {
               variants={itemVariants}
               className="text-lg text-gray-300 leading-relaxed mb-8 max-w-2xl"
             >
-              I ensure software quality through detailed manual testing and reliable automation, helping businesses launch stable and scalable products.
+              I ensure software quality through detailed manual testing and
+              reliable automation, helping businesses launch stable and scalable
+              products.
             </motion.p>
 
             <motion.div
@@ -490,8 +511,6 @@ const HeroSection = () => {
                   <span className="relative">Download Resume</span>
                 </button>
               </Link>
-
-              
             </motion.div>
 
             <motion.div variants={itemVariants} className="flex gap-4">
@@ -556,7 +575,7 @@ const HeroSection = () => {
 
               {/* Pulsing rings */}
               <div className="absolute -inset-4 rounded-3xl border-2 border-green-400/30 animate-glow-pulse" />
-              
+
               {/* Scanning line effect */}
               {isHovering && (
                 <div className="absolute inset-0 rounded-2xl overflow-hidden">
@@ -591,7 +610,7 @@ const HeroSection = () => {
                     className="object-cover w-full h-full transition-all duration-700 group-hover:scale-105 group-hover:brightness-110"
                     priority
                   />
-                  
+
                   {/* Overlay gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
@@ -618,18 +637,31 @@ const HeroSection = () => {
                 </div>
               </motion.div>
 
-              {/* Professional title badge */}
-              <motion.div
-                className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700 rounded-full shadow-lg backdrop-blur-sm"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1, duration: 0.5 }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-gray-300">Certified QA Specialist</span>
-                </div>
-              </motion.div>
+              {/* Professional credential badge */}
+              <div className="flex items-center gap-3 mb-3 flex-wrap mt-6 justify-center">
+                <h3 className="text-2xl font-bold text-white">{cert.title}</h3>
+
+                {/* Professional Gold Badge */}
+                <motion.span
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full 
+               bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500
+               text-gray-900 text-xs font-bold shadow-lg shadow-yellow-500/30
+               border border-yellow-300/50 overflow-hidden"
+                >
+                  {/* Shine effect - FIXED: Single line string */}
+                  <span
+                    className="absolute inset-0 -translate-x-full animate-[shine_2.5s_linear_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                  />
+
+                  <ShieldCheck size={14} className="relative z-10" />
+                  <span className="relative z-10 tracking-wide">
+                    PROFESSIONAL CERTIFIED
+                  </span>
+                </motion.span>
+              </div>
             </div>
           </motion.div>
         </div>
