@@ -716,7 +716,6 @@
 
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView, Variants } from "framer-motion";
-import Image from "next/image";
 
 // Define proper types
 export type TSkills = {

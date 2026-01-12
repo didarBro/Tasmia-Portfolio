@@ -389,11 +389,9 @@
 
 
 
-
-
 "use client";
 
-import { SetStateAction, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Section {
   id: string;
