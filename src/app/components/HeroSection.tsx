@@ -627,7 +627,7 @@ const HeroSection = () => {
               >
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-gray-300">QA Specialist</span>
+                  <span className="text-sm font-medium text-gray-300">Certified QA Specialist</span>
                 </div>
               </motion.div>
             </div>
