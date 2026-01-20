@@ -324,7 +324,10 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
+    <section
+      id="home"
+      className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden scroll-mt-28"
+    >
       {/* New advanced background animations */}
       <style jsx global>{`
         @keyframes moveGrid {

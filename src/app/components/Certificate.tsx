@@ -128,7 +128,7 @@ const CertificateSection: React.FC = () => {
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/30"
                   >
                     <ImageIcon size={18} />
-                    View Certificate
+                     {expandedId === cert.id ? "Hide Certificate" : "View Certificate"}
                     {expandedId === cert.id ? (
                       <ChevronUp size={18} />
                     ) : (
