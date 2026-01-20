@@ -17,8 +17,6 @@ const UpdateProject = () => {
   const [technologies, setTechnologies] = useState<string[]>([]);
   const [techInput, setTechInput] = useState("");
 
-  const project = projectData?.data;
-
   const {
     register,
     handleSubmit,
@@ -27,20 +25,23 @@ const UpdateProject = () => {
   } = useForm();
 
   useEffect(() => {
-    if (projectData) {
+    if (projectData?.data) {
+      const project = projectData.data;
+
       reset({
-        title: project?.title,
-        description: project?.description,
-        clientCode: project?.clientCode,
-        serverCode: project?.serverCode,
-        liveLink: project?.liveLink,
-        date: project?.date || "", // Add date here
-        category: project?.category || "", // Add category here
-        type: project?.type || "", // Add type here
-        challenges: project?.challenges || "", // Add challenges here
-        features: project?.features || "", // Add features here
+        title: project.title,
+        description: project.description,
+        clientCode: project.clientCode,
+        serverCode: project.serverCode,
+        liveLink: project.liveLink,
+        date: project.date || "", // Add date here
+        category: project.category || "", // Add category here
+        type: project.type || "", // Add type here
+        challenges: project.challenges || "", // Add challenges here
+        features: project.features || "", // Add features here
       });
-      setTechnologies(projectData.technologies || []);
+
+      setTechnologies(project.technologies || []);
     }
   }, [projectData, reset]);
 
@@ -62,6 +63,7 @@ const UpdateProject = () => {
     const toastId = toast.loading("Updating...");
 
     try {
+      const project = projectData?.data;
       const updatedProjectInfo = {
         title: data.title,
         description: data.description,

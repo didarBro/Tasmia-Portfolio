@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FieldValues, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const UpdateBlog = () => {
   const router = useRouter();
@@ -169,11 +170,14 @@ const UpdateBlog = () => {
           {currentImg && (
             <div className="mb-3">
               <p className="text-sm text-gray-600">Current Image:</p>
-              <img
-                src={currentImg}
-                alt="Current blog"
-                className="h-40 w-40 object-cover rounded-md shadow-md"
-              />
+              <div className="h-40 w-40 relative">
+                <Image
+                  src={currentImg}
+                  alt="Current blog"
+                  fill
+                  className="object-cover rounded-md shadow-md"
+                />
+              </div>
             </div>
           )}
           <input

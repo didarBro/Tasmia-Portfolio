@@ -1,56 +1,59 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import Head from "next/head";
-import { motion } from "framer-motion"; // For animations
+import { motion } from "framer-motion";
 
-const Error = ({
-  error,
-}: {
+type ErrorProps = {
   error: Error & { digest?: string };
-  rest?: () => void;
-}) => {
+  reset: () => void;
+};
+
+const GlobalError = ({ error, reset }: ErrorProps) => {
+  useEffect(() => {
+    console.error("App error:", error);
+  }, [error]);
+
   return (
-    <>
-      <Head>
-        <title>Something Went Wrong</title>
-        <meta name="description" content="An unexpected error has occurred." />
-      </Head>
-      <section className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-indigo-900 to-purple-800 text-white text-center p-8">
-        <motion.h1
-          className="text-6xl font-extrabold text-red-400 text-shadow-md"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          Oops! Something Went Wrong
-        </motion.h1>
-        <motion.p
-          className="text-lg md:text-2xl my-6 font-medium tracking-wide text-shadow-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          {error.message}. Please try again or head back to the homepage.
-        </motion.p>
-        <motion.div
-          className="flex flex-col space-y-4 mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-        >
-          <Link href="/" passHref>
-            <motion.button
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-full shadow-xl transform hover:scale-110 transition duration-300"
-              whileHover={{ scale: 1.1 }}
-            >
-              🏠 Back to Home
-            </motion.button>
+    <section className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-emerald-900 text-white text-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-xl mx-auto"
+      >
+        <p className="text-sm uppercase tracking-[0.3em] text-emerald-400 mb-4">
+          Oops! Something went wrong
+        </p>
+        <h1 className="text-3xl md:text-5xl font-extrabold mb-4">
+          We hit an unexpected error
+        </h1>
+        <p className="text-sm md:text-base text-emerald-100/80 mb-8">
+          An unexpected issue occurred while loading this page. You can try
+          again, or head back to the homepage.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            onClick={reset}
+            className="px-6 py-3 rounded-full bg-emerald-500 hover:bg-emerald-600 text-sm font-semibold shadow-lg shadow-emerald-500/30 transition-colors"
+          >
+            Try again
+          </button>
+          <Link
+            href="/"
+            className="px-6 py-3 rounded-full border border-emerald-400/60 text-sm font-semibold hover:bg-emerald-500/10 transition-colors"
+          >
+            🏠 Back to Home
           </Link>
-        </motion.div>
-      </section>
-    </>
+        </div>
+
+        <p className="mt-6 text-xs text-emerald-200/60">
+          If this keeps happening, please contact me so I can take a look.
+        </p>
+      </motion.div>
+    </section>
   );
 };
 
-export default Error;
+export default GlobalError;

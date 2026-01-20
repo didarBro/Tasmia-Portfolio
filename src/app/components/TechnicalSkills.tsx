@@ -28,6 +28,16 @@ type TSkillCategory =
   | "tools-platforms"
   | "performance-security";
 
+// Static, non-reactive categories so they don't have to be in hook dependency arrays
+const CATEGORIES: TSkillCategory[] = [
+  "all",
+  "automation",
+  "manual-testing",
+  "programming",
+  "tools-platforms",
+  "performance-security",
+];
+
 // Define types for SkillCard props
 type TSkillCardProps = {
   skill: TDisplaySkill;
@@ -93,15 +103,6 @@ const TechnicalSkills = () => {
       level: 78,
       img: "https://cdn-icons-png.flaticon.com/512/2103/2103655.png",
     },
-  ];
-
-  const categories: TSkillCategory[] = [
-    "all",
-    "automation",
-    "manual-testing",
-    "programming",
-    "tools-platforms",
-    "performance-security",
   ];
 
   const getSkillCategory = (skillName: string): TSkillCategory => {
@@ -281,30 +282,33 @@ const TechnicalSkills = () => {
   };
 
   // Handle scroll-based category switching
-  const handleScroll = useCallback((e: WheelEvent) => {
-    if (isScrolling) return;
-    
-    const currentIndex = categories.indexOf(activeTab);
-    const direction = e.deltaY > 0 ? 'down' : 'up';
-    
-    if (direction === 'down' && currentIndex < categories.length - 1) {
-      setIsScrolling(true);
-      setScrollDirection('down');
-      setActiveTab(categories[currentIndex + 1]);
-      
-      setTimeout(() => {
-        setIsScrolling(false);
-      }, 600);
-    } else if (direction === 'up' && currentIndex > 0) {
-      setIsScrolling(true);
-      setScrollDirection('up');
-      setActiveTab(categories[currentIndex - 1]);
-      
-      setTimeout(() => {
-        setIsScrolling(false);
-      }, 600);
-    }
-  }, [activeTab, isScrolling]);
+  const handleScroll = useCallback(
+    (e: WheelEvent) => {
+      if (isScrolling) return;
+
+      const currentIndex = CATEGORIES.indexOf(activeTab);
+      const direction = e.deltaY > 0 ? "down" : "up";
+
+      if (direction === "down" && currentIndex < CATEGORIES.length - 1) {
+        setIsScrolling(true);
+        setScrollDirection("down");
+        setActiveTab(CATEGORIES[currentIndex + 1]);
+
+        setTimeout(() => {
+          setIsScrolling(false);
+        }, 600);
+      } else if (direction === "up" && currentIndex > 0) {
+        setIsScrolling(true);
+        setScrollDirection("up");
+        setActiveTab(CATEGORIES[currentIndex - 1]);
+
+        setTimeout(() => {
+          setIsScrolling(false);
+        }, 600);
+      }
+    },
+    [activeTab, isScrolling]
+  );
 
   // Handle touch for mobile devices
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -312,37 +316,40 @@ const TechnicalSkills = () => {
     lastScrollY.current = touch.clientY;
   }, []);
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (isScrolling) return;
-    
-    const touch = e.touches[0];
-    const deltaY = lastScrollY.current - touch.clientY;
-    
-    if (Math.abs(deltaY) > 50) {
-      const currentIndex = categories.indexOf(activeTab);
-      const direction = deltaY > 0 ? 'up' : 'down';
-      
-      if (direction === 'down' && currentIndex < categories.length - 1) {
-        setIsScrolling(true);
-        setScrollDirection('down');
-        setActiveTab(categories[currentIndex + 1]);
-        
-        setTimeout(() => {
-          setIsScrolling(false);
-        }, 600);
-      } else if (direction === 'up' && currentIndex > 0) {
-        setIsScrolling(true);
-        setScrollDirection('up');
-        setActiveTab(categories[currentIndex - 1]);
-        
-        setTimeout(() => {
-          setIsScrolling(false);
-        }, 600);
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (isScrolling) return;
+
+      const touch = e.touches[0];
+      const deltaY = lastScrollY.current - touch.clientY;
+
+      if (Math.abs(deltaY) > 50) {
+        const currentIndex = CATEGORIES.indexOf(activeTab);
+        const direction = deltaY > 0 ? "up" : "down";
+
+        if (direction === "down" && currentIndex < CATEGORIES.length - 1) {
+          setIsScrolling(true);
+          setScrollDirection("down");
+          setActiveTab(CATEGORIES[currentIndex + 1]);
+
+          setTimeout(() => {
+            setIsScrolling(false);
+          }, 600);
+        } else if (direction === "up" && currentIndex > 0) {
+          setIsScrolling(true);
+          setScrollDirection("up");
+          setActiveTab(CATEGORIES[currentIndex - 1]);
+
+          setTimeout(() => {
+            setIsScrolling(false);
+          }, 600);
+        }
+
+        lastScrollY.current = touch.clientY;
       }
-      
-      lastScrollY.current = touch.clientY;
-    }
-  }, [activeTab, isScrolling]);
+    },
+    [activeTab, isScrolling]
+  );
 
   // Add scroll event listener
   useEffect(() => {
@@ -367,13 +374,13 @@ const TechnicalSkills = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isScrolling) return;
       
-      const currentIndex = categories.indexOf(activeTab);
+      const currentIndex = CATEGORIES.indexOf(activeTab);
       
-      if (e.key === 'ArrowDown' && currentIndex < categories.length - 1) {
+      if (e.key === 'ArrowDown' && currentIndex < CATEGORIES.length - 1) {
         e.preventDefault();
         setIsScrolling(true);
         setScrollDirection('down');
-        setActiveTab(categories[currentIndex + 1]);
+        setActiveTab(CATEGORIES[currentIndex + 1]);
         
         setTimeout(() => {
           setIsScrolling(false);
@@ -382,7 +389,7 @@ const TechnicalSkills = () => {
         e.preventDefault();
         setIsScrolling(true);
         setScrollDirection('up');
-        setActiveTab(categories[currentIndex - 1]);
+        setActiveTab(CATEGORIES[currentIndex - 1]);
         
         setTimeout(() => {
           setIsScrolling(false);
@@ -469,7 +476,7 @@ const TechnicalSkills = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          {categories.map((category) => (
+          {CATEGORIES.map((category) => (
             <motion.button
               key={category}
               onClick={() => setActiveTab(category)}
@@ -588,6 +595,7 @@ const SkillCard: React.FC<TSkillCardProps> = ({
 }) => {
   const cardRef = useRef(null);
   const cardInView = useInView(cardRef, { once: true, margin: "-50px" });
+  const [imgError, setImgError] = useState(false);
 
   return (
     <motion.div
@@ -650,20 +658,15 @@ const SkillCard: React.FC<TSkillCardProps> = ({
                 transition={{ duration: 0.5 }}
               >
                 <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-2 flex items-center justify-center border border-gray-600/50 group-hover:border-green-500/50 transition-colors duration-300">
-                  {skill.img ? (
-                    <div className="relative w-8 h-8">
-                      <Image
-                        src={skill.img}
-                        alt={skill.name}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.parentElement!.innerHTML = 
-                            `<span class="text-green-400 font-bold text-xl">${skill.name.charAt(0)}</span>`;
-                        }}
-                      />
-                    </div>
+                  {skill.img && !imgError ? (
+                    <Image
+                      src={skill.img}
+                      alt={skill.name}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                      onError={() => setImgError(true)}
+                    />
                   ) : (
                     <span className="text-green-400 font-bold text-xl">
                       {skill.name.charAt(0)}

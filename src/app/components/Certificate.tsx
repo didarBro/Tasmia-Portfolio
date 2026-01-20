@@ -36,7 +36,7 @@ const CertificateSection: React.FC = () => {
       year: "2024",
       description:
         "This certification validates strong foundational and practical knowledge in Software Quality Assurance, including manual testing methodologies, test case design, defect tracking, and quality assurance best practices in real-world software projects.",
-      image: "../assets/TasmiaKhanSQACertificate.pdf.png",
+      image: "/assets/TasmiaKhanSQACertificate.pdf.png",
     },
   ];
 
@@ -93,11 +93,14 @@ const CertificateSection: React.FC = () => {
               <div className="p-6 flex flex-col md:flex-row gap-6">
                 {/* Thumbnail */}
                 <div className="md:w-1/3">
-                  <Image
-                    src={cert.image}
-                    alt={cert.title}
-                    className="rounded-lg border border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 object-cover"
-                  />
+                  <div className="relative w-full h-48 md:h-56">
+                    <Image
+                      src={cert.image}
+                      alt={cert.title}
+                      fill
+                      className="rounded-lg border border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 object-cover"
+                    />
+                  </div>
                 </div>
 
                 {/* Info */}
@@ -147,11 +150,14 @@ const CertificateSection: React.FC = () => {
                   >
                     <div className="px-6 pb-6 pt-4 border-t border-gray-700">
                       <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
-                        <img
-                          src={cert.image}
-                          alt={`${cert.title} Full View`}
-                          className="w-full rounded-lg shadow-lg"
-                        />
+                        <div className="relative w-full h-[500px]">
+                          <Image
+                            src={cert.image}
+                            alt={`${cert.title} Full View`}
+                            fill
+                            className="rounded-lg shadow-lg object-contain"
+                          />
+                        </div>
                       </div>
                     </div>
                   </motion.div>
