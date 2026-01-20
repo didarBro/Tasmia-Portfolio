@@ -284,10 +284,23 @@ const TechnicalSkills = () => {
   // Handle scroll-based category switching
   const handleScroll = useCallback(
     (e: WheelEvent) => {
-      if (isScrolling) return;
-
       const currentIndex = CATEGORIES.indexOf(activeTab);
       const direction = e.deltaY > 0 ? "down" : "up";
+
+      // At first category scrolling up or last category scrolling down,
+      // allow normal page scroll.
+      if (
+        (direction === "down" && currentIndex === CATEGORIES.length - 1) ||
+        (direction === "up" && currentIndex === 0)
+      ) {
+        return;
+      }
+
+      // For in-between categories, prevent normal page scroll and switch category
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isScrolling) return;
 
       if (direction === "down" && currentIndex < CATEGORIES.length - 1) {
         setIsScrolling(true);
@@ -326,6 +339,20 @@ const TechnicalSkills = () => {
       if (Math.abs(deltaY) > 50) {
         const currentIndex = CATEGORIES.indexOf(activeTab);
         const direction = deltaY > 0 ? "up" : "down";
+
+        // At first category swiping down (to go up) or last category swiping up (to go down),
+        // allow normal page scroll.
+        if (
+          (direction === "down" && currentIndex === 0) ||
+          (direction === "up" && currentIndex === CATEGORIES.length - 1)
+        ) {
+          lastScrollY.current = touch.clientY;
+          return;
+        }
+
+        // For in-between categories, prevent normal page scroll and switch category
+        e.preventDefault();
+        e.stopPropagation();
 
         if (direction === "down" && currentIndex < CATEGORIES.length - 1) {
           setIsScrolling(true);
@@ -495,7 +522,10 @@ const TechnicalSkills = () => {
         </motion.div>
 
         {/* Skills Grid with Scroll Animation */}
-        <div ref={skillsContainerRef} className="cursor-grab active:cursor-grabbing">
+        <div
+          ref={skillsContainerRef}
+          className="cursor-grab active:cursor-grabbing overscroll-contain"
+        >
           <AnimatePresence mode="wait" custom={scrollDirection}>
             <motion.div
               key={activeTab}
