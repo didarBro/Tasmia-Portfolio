@@ -64,7 +64,6 @@ const MovingGrid = () => (
   </div>
 );
 
-
 const WavyLines = () => (
   <div className="absolute inset-0 overflow-hidden">
     <svg className="absolute w-full h-full opacity-10" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -107,39 +106,51 @@ const MatrixRain = () => {
   return <canvas ref={canvasRef} className="absolute inset-0 opacity-20" style={{ pointerEvents: "none" }} />;
 };
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const CROP_TOP = 60;   // hides channel name + icon bar at top
-const CROP_BOT = 50;   // clips the black YouTube control bar at the bottom
+// ── Video constants ───────────────────────────────────────────────────────────
+const CROP_TOP       = 60;   // px: clips YouTube title bar at top of iframe
+const CROP_BOT       = 50;   // px: clips black YouTube control bar at bottom
+const MINI_VW        = 360;  // px: mini-player visible width
+const MINI_VH        = 202;  // px: mini-player visible height (pure video)
+const MINI_RIGHT     = 16;   // px: gap from right edge of viewport to right edge of video
+const MINI_TOP       = 80;   // px: gap from top of viewport to top of visible video
+const MINI_CLOSE_SZ  = 28;   // px: close button diameter
+const CLOSE_INSET    = 8;    // px: close button inset from video corner
 
-// Mini-player dimensions (visible area after cropping)
-const MINI_VW = 360;   // visible width
-const MINI_VH = 202;   // visible height (pure video, no chrome, no black bar)
+// Shared CSS transition string
+const TRANS = [
+  "top 0.45s cubic-bezier(0.4,0,0.2,1)",
+  "left 0.45s cubic-bezier(0.4,0,0.2,1)",
+  "width 0.45s cubic-bezier(0.4,0,0.2,1)",
+  "height 0.45s cubic-bezier(0.4,0,0.2,1)",
+  "opacity 0.3s ease",
+  "box-shadow 0.45s ease",
+  "clip-path 0.45s ease",
+].join(", ");
 
-// Mini-player position — top-right corner
-const MINI_RIGHT_OUTER = 16;   // gap from viewport right edge to video right edge
-const MINI_CLOSE_SIZE  = 28;   // close button diameter
-const MINI_TOP         = 80;   // distance from top of viewport (navbar height + small gap)
-
-// ── Single-iframe floating video ──────────────────────────────────────────────
+// ── FloatingVideo ─────────────────────────────────────────────────────────────
 //
-// ONE <iframe> always in the DOM, moved with CSS transitions.
-// A transparent placeholder <div> in the hero keeps layout space reserved.
-// Video loops via YouTube's loop=1&playlist= parameter.
+// A SINGLE <iframe> that never unmounts (so the video never restarts).
+// A hidden <div> placeholder keeps the layout space in the hero section.
+//
+// KEY FIX FOR "GOES TO TOP FIRST":
+//   When the user scrolls the placeholder out of view, we use the imperative
+//   DOM API to INSTANTLY teleport the iframe to the mini position (transition:none),
+//   THEN re-enable transitions in the next animation frame before updating React
+//   state. This means React's style recalc sees the iframe already at the correct
+//   position and no animated travel occurs.
 //
 const FloatingVideo = () => {
   const placeholderRef = useRef<HTMLDivElement>(null);
+  const iframeRef      = useRef<HTMLIFrameElement>(null);
   const [isMini, setIsMini] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [heroRect, setHeroRect] = useState<DOMRect | null>(null);
-  // After the iframe has been placed at the mini position at least once,
-  // we allow CSS transitions. Until then, movements are instant (no travel).
-  const miniReadyRef = useRef(false);
 
+  // Re-measure the placeholder's screen position on scroll/resize
   const measure = () => {
     if (placeholderRef.current)
       setHeroRect(placeholderRef.current.getBoundingClientRect());
   };
-
   useEffect(() => {
     measure();
     window.addEventListener("resize", measure);
@@ -150,12 +161,39 @@ const FloatingVideo = () => {
     };
   }, []);
 
+  // Watch whether the placeholder is visible
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => {
-        const nowMini = !entry.isIntersecting;
-        setIsMini(nowMini);
-        if (entry.isIntersecting) setHidden(false);
+        if (!entry.isIntersecting) {
+          // ── Placeholder left view → go mini ──────────────────────────────
+          // Step 1: INSTANTLY write mini position to the DOM with NO transition.
+          //         The browser paints the iframe at top-right before any animation.
+          const el = iframeRef.current;
+          if (el) {
+            const iframeH = MINI_VH + CROP_TOP + CROP_BOT;
+            el.style.transition    = "none";
+            el.style.top           = `${MINI_TOP - CROP_TOP}px`;
+            el.style.left          = `calc(100vw - ${MINI_VW + MINI_RIGHT}px)`;
+            el.style.width         = `${MINI_VW}px`;
+            el.style.height        = `${iframeH}px`;
+            el.style.opacity       = "1";
+            el.style.clipPath      = `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`;
+            el.style.boxShadow     = "0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,222,128,0.25)";
+            el.style.pointerEvents = "auto";
+          }
+          // Step 2: After ONE paint frame, re-enable transitions and tell React.
+          //         From this point any further style changes (e.g. resizing back
+          //         to hero) will animate smoothly.
+          requestAnimationFrame(() => {
+            if (el) el.style.transition = TRANS;
+            setIsMini(true);
+          });
+        } else {
+          // ── Placeholder back in view → restore hero ───────────────────────
+          setIsMini(false);
+          setHidden(false);
+        }
       },
       { threshold: 0.1 }
     );
@@ -163,24 +201,20 @@ const FloatingVideo = () => {
     return () => obs.disconnect();
   }, []);
 
-  // loop=1 requires playlist= set to the same video ID for YouTube looping to work
+  // YouTube src — loop=1 + playlist= required for looping in embeds
   const VIDEO_ID = "gcX8ncx0f00";
-  const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&loop=1&playlist=${VIDEO_ID}&controls=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&enablejsapi=1`;
+  const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&enablejsapi=1&playsinline=1`;
 
-  const TRANS = "top 0.45s cubic-bezier(0.4,0,0.2,1), left 0.45s cubic-bezier(0.4,0,0.2,1), width 0.45s cubic-bezier(0.4,0,0.2,1), height 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, box-shadow 0.45s ease, clip-path 0.45s ease";
-
+  // React-controlled style — used for hero mode and hidden/parked state.
+  // Mini mode is handled imperatively above; React just keeps state in sync.
   const getIframeStyle = (): React.CSSProperties => {
-    // Mini position constants (reused in multiple branches)
     const miniTop  = MINI_TOP - CROP_TOP;
-    const miniLeft = `calc(100vw - ${MINI_VW + MINI_RIGHT_OUTER}px)`;
+    const miniLeft = `calc(100vw - ${MINI_VW + MINI_RIGHT}px)`;
     const miniH    = MINI_VH + CROP_TOP + CROP_BOT;
     const miniClip = `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`;
 
+    // Hero mode
     if (!isMini && heroRect) {
-      // ── Hero mode ──
-      // Once we return to hero, re-enable transition for future mini trips
-      miniReadyRef.current = false;
-      const iframeH = heroRect.height + CROP_TOP + CROP_BOT;
       return {
         position: "fixed",
         zIndex: 9999,
@@ -191,23 +225,19 @@ const FloatingVideo = () => {
         top: heroRect.top - CROP_TOP,
         left: heroRect.left,
         width: heroRect.width,
-        height: iframeH,
+        height: heroRect.height + CROP_TOP + CROP_BOT,
         clipPath: `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`,
         boxShadow: "0 20px 60px -10px rgba(34,197,94,0.3)",
       };
     }
 
+    // Mini mode (visible) — matches what we wrote imperatively above
     if (isMini && !hidden) {
-      // ── Mini mode ──
-      // On the FIRST time we go mini, skip transition (instant snap to top-right).
-      // On subsequent times (returning from hero) allow the smooth slide.
-      const trans = miniReadyRef.current ? TRANS : "none";
-      miniReadyRef.current = true;  // mark as positioned, enable transitions next time
       return {
         position: "fixed",
         zIndex: 9999,
         border: "none",
-        transition: trans,
+        transition: TRANS,
         pointerEvents: "auto",
         opacity: 1,
         top: miniTop,
@@ -219,14 +249,12 @@ const FloatingVideo = () => {
       };
     }
 
-    // ── Hidden / closed ──
-    // Park at mini position (invisible) so if reopened there's no travel from
-    // a stale off-screen coordinate.
+    // Hidden / parked — sits at mini position but invisible, no spatial jump
     return {
       position: "fixed",
       zIndex: 9999,
       border: "none",
-      transition: "opacity 0.2s ease",   // only fade, no spatial movement
+      transition: "opacity 0.2s ease",
       pointerEvents: "none",
       opacity: 0,
       top: miniTop,
@@ -237,47 +265,17 @@ const FloatingVideo = () => {
     };
   };
 
-  // Close button sits inside the top-right corner of the visible mini video.
-  // `right` is measured from viewport right edge.
-  // Video right edge = MINI_RIGHT_OUTER from viewport right.
-  // Button is inset 8px from both the right and top edges of the video.
-  const CLOSE_INSET = 8;
-  const closeButtonStyle: React.CSSProperties = {
-    position: "fixed",
-    top: MINI_TOP + CLOSE_INSET,
-    right: MINI_RIGHT_OUTER + CLOSE_INSET,
-    zIndex: 10000,
-    width: `${MINI_CLOSE_SIZE}px`,
-    height: `${MINI_CLOSE_SIZE}px`,
-    borderRadius: "50%",
-    background: "rgba(17,24,39,0.85)",
-    border: "1px solid rgba(74,222,128,0.4)",
-    color: "#e5e7eb",
-    fontSize: "18px",
-    lineHeight: "1",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "background 0.2s, color 0.2s",
-    backdropFilter: "blur(4px)",
-  };
-
   return (
     <>
-      {/* Invisible placeholder — reserves layout space in the hero */}
+      {/* Invisible placeholder — keeps layout space in the hero */}
       <div
         ref={placeholderRef}
-        style={{
-          width: "100%",
-          aspectRatio: "16/10",
-          minHeight: "300px",
-          visibility: "hidden",
-        }}
+        style={{ width: "100%", aspectRatio: "16/10", minHeight: "300px", visibility: "hidden" }}
       />
 
-      {/* Single persistent iframe — never unmounts, video never restarts */}
+      {/* Single persistent iframe */}
       <iframe
+        ref={iframeRef}
         src={src}
         style={getIframeStyle()}
         title="Tasmia Khan Portfolio"
@@ -285,18 +283,37 @@ const FloatingVideo = () => {
         allowFullScreen
       />
 
-      {/* Mini-player close button — only shown in mini mode */}
+      {/* Close button — inset inside top-right corner of mini video */}
       {isMini && !hidden && (
         <button
           onClick={() => setHidden(true)}
-          style={closeButtonStyle}
+          style={{
+            position: "fixed",
+            top:   MINI_TOP + CLOSE_INSET,
+            right: MINI_RIGHT + CLOSE_INSET,
+            zIndex: 10000,
+            width:  `${MINI_CLOSE_SZ}px`,
+            height: `${MINI_CLOSE_SZ}px`,
+            borderRadius: "50%",
+            background: "rgba(17,24,39,0.85)",
+            border: "1px solid rgba(74,222,128,0.4)",
+            color: "#e5e7eb",
+            fontSize: "18px",
+            lineHeight: "1",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background 0.2s, color 0.2s",
+            backdropFilter: "blur(4px)",
+          }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.9)";
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(220,38,38,0.9)";
             (e.currentTarget as HTMLButtonElement).style.color = "#fff";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(17,24,39,0.95)";
-            (e.currentTarget as HTMLButtonElement).style.color = "#9ca3af";
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(17,24,39,0.85)";
+            (e.currentTarget as HTMLButtonElement).style.color = "#e5e7eb";
           }}
           aria-label="Close mini player"
         >
@@ -332,16 +349,16 @@ const HeroSection = () => {
     >
       <style jsx global>{`
         @keyframes moveGrid {
-          0% { transform: translate(0, 0); }
+          0%   { transform: translate(0, 0); }
           100% { transform: translate(-50px, -50px); }
         }
         @keyframes floatUpDown {
-          0% { transform: translate(0, 0) rotate(45deg); }
+          0%   { transform: translate(0, 0) rotate(45deg); }
           100% { transform: translate(0, -100px) rotate(45deg); }
         }
         @keyframes spinSlow {
           from { transform: rotate(45deg); }
-          to { transform: rotate(405deg); }
+          to   { transform: rotate(405deg); }
         }
         .animate-wave1 { animation: wave1 12s ease-in-out infinite; }
         .animate-wave2 { animation: wave2 10s ease-in-out infinite; }
@@ -379,10 +396,10 @@ const HeroSection = () => {
             key={i}
             className="absolute bg-white rounded-full opacity-20"
             style={{
-              width: `${Math.random() * 5 + 1}px`,
+              width:  `${Math.random() * 5 + 1}px`,
               height: `${Math.random() * 5 + 1}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
+              top:    `${Math.random() * 100}%`,
+              left:   `${Math.random() * 100}%`,
               animation: `float ${Math.random() * 10 + 10}s linear infinite`,
             }}
           />
@@ -392,7 +409,7 @@ const HeroSection = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-5 md:pt-24">
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-8 md:gap-12">
 
-          {/* ── Left content ── */}
+          {/* Left content */}
           <motion.div
             className="w-full md:w-3/5 mt-10 md:mt-0"
             initial="hidden"
@@ -426,10 +443,10 @@ const HeroSection = () => {
 
             <motion.div variants={itemVariants} className="flex gap-4">
               {[
-                { href: "https://github.com/KTasmi", icon: <FaGithub className="text-xl" />, label: "GitHub", cls: "from-gray-700 to-gray-800 hover:from-green-400 hover:to-emerald-600 border-gray-600 hover:border-green-400/50 hover:shadow-green-500/30" },
-                { href: "https://www.linkedin.com/in/KhanTasmia/", icon: <FaLinkedin className="text-xl" />, label: "LinkedIn", cls: "from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 border-blue-500 hover:border-blue-400/50 hover:shadow-blue-500/30" },
-                { href: "https://wa.me/+8801621296671", icon: <FaWhatsapp className="text-xl" />, label: "WhatsApp", cls: "from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-green-600 hover:border-green-500/50 hover:shadow-green-500/30" },
-                { href: "https://www.facebook.com/share/1CsxTi79hD/", icon: <FaFacebook className="text-xl" />, label: "Facebook", cls: "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-600 hover:border-blue-500/50 hover:shadow-blue-600/30" },
+                { href: "https://github.com/KTasmi",                          icon: <FaGithub   className="text-xl" />, label: "GitHub",    cls: "from-gray-700 to-gray-800 hover:from-green-400 hover:to-emerald-600 border-gray-600 hover:border-green-400/50 hover:shadow-green-500/30" },
+                { href: "https://www.linkedin.com/in/KhanTasmia/",            icon: <FaLinkedin className="text-xl" />, label: "LinkedIn",  cls: "from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 border-blue-500 hover:border-blue-400/50 hover:shadow-blue-500/30" },
+                { href: "https://wa.me/+8801621296671",                        icon: <FaWhatsapp className="text-xl" />, label: "WhatsApp", cls: "from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-green-600 hover:border-green-500/50 hover:shadow-green-500/30" },
+                { href: "https://www.facebook.com/share/1CsxTi79hD/",        icon: <FaFacebook className="text-xl" />, label: "Facebook",  cls: "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-600 hover:border-blue-500/50 hover:shadow-blue-600/30" },
               ].map(({ href, icon, label, cls }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                   className={`flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br ${cls} text-gray-300 hover:text-white border transition-all duration-300 shadow-lg transform hover:-translate-y-1`}>
@@ -439,7 +456,7 @@ const HeroSection = () => {
             </motion.div>
           </motion.div>
 
-          {/* ── Right: video ── */}
+          {/* Right: video placeholder */}
           <motion.div
             className="w-full md:w-2/5 flex justify-center mt-16 md:mt-0 relative"
             initial="hidden"
