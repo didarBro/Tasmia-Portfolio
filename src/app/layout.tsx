@@ -3,6 +3,7 @@ import "./globals.css";
 // import { Poppins } from "next/font/google"; // Import Poppins font
 import TopLoader from "./components/TopLoader";
 import ReduxProvider from "./provider/ReduxProvider";
+import ChatbotWidget from "./components/ChatbotWidget";
 
 // Load the Poppins font with the subsets you need
 // const poppins = Poppins({ subsets: ["latin"], weight: ["400", "700"] });
@@ -21,7 +22,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`bg-[#0a0a0a]`}>
         <TopLoader />
-        <ReduxProvider>{children}</ReduxProvider>
+        <ReduxProvider>
+          {children}
+          <ChatbotWidget />
+        </ReduxProvider>
       </body>
     </html>
   );
