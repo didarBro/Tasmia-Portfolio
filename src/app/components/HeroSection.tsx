@@ -64,36 +64,6 @@ const MovingGrid = () => (
   </div>
 );
 
-const FloatingCubes = () => {
-  const cubesData = Array.from({ length: 8 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 100 + 50,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 20 + 20,
-    delay: Math.random() * 5,
-    opacity: Math.random() * 0.05 + 0.02,
-  }));
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      {cubesData.map((cube) => (
-        <div
-          key={cube.id}
-          className="absolute border border-green-400/20"
-          style={{
-            width: `${cube.size}px`,
-            height: `${cube.size}px`,
-            top: `${cube.y}%`,
-            left: `${cube.x}%`,
-            opacity: cube.opacity,
-            transform: "rotate(45deg)",
-            animation: `floatUpDown ${cube.duration}s ease-in-out ${cube.delay}s infinite alternate, spinSlow ${cube.duration * 1.5}s linear ${cube.delay}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-};
 
 const WavyLines = () => (
   <div className="absolute inset-0 overflow-hidden">
