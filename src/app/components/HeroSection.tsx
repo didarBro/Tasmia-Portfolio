@@ -1,12 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FaDownload,
   FaGithub,
   FaLinkedin,
   FaFacebook,
   FaWhatsapp,
+  FaVolumeMute,
+  FaVolumeUp,
 } from "react-icons/fa";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -107,16 +109,21 @@ const MatrixRain = () => {
 };
 
 // ── Video constants ───────────────────────────────────────────────────────────
-const CROP_TOP       = 60;   // px: clips YouTube title bar at top of iframe
-const CROP_BOT       = 50;   // px: clips black YouTube control bar at bottom
-const MINI_VW        = 360;  // px: mini-player visible width
-const MINI_VH        = 202;  // px: mini-player visible height (pure video)
-const MINI_RIGHT     = 16;   // px: gap from right edge of viewport to right edge of video
-const MINI_TOP       = 80;   // px: gap from top of viewport to top of visible video
-const MINI_CLOSE_SZ  = 28;   // px: close button diameter
-const CLOSE_INSET    = 8;    // px: close button inset from video corner
+const CROP_TOP     = 60;
+const CROP_BOT     = 50;
+const MINI_RIGHT   = 12;
+const MINI_TOP     = 80;
+const MINI_CLOSE_SZ = 28;
+const CLOSE_INSET  = 8;
 
-// Shared CSS transition string
+const getMiniDimensions = () => {
+  if (typeof window === "undefined") return { vw: 360, vh: 202 };
+  const screenW = window.innerWidth;
+  const vw = screenW < 400 ? Math.min(screenW - 24, 280) : 360;
+  const vh = Math.round(vw * (9 / 16));
+  return { vw, vh };
+};
+
 const TRANS = [
   "top 0.45s cubic-bezier(0.4,0,0.2,1)",
   "left 0.45s cubic-bezier(0.4,0,0.2,1)",
@@ -127,30 +134,30 @@ const TRANS = [
   "clip-path 0.45s ease",
 ].join(", ");
 
+// ── Send postMessage to YouTube iframe ───────────────────────────────────────
+const sendYTCommand = (iframe: HTMLIFrameElement, func: string) => {
+  iframe.contentWindow?.postMessage(
+    JSON.stringify({ event: "command", func, args: [] }),
+    "https://www.youtube.com"
+  );
+};
+
 // ── FloatingVideo ─────────────────────────────────────────────────────────────
-//
-// A SINGLE <iframe> that never unmounts (so the video never restarts).
-// A hidden <div> placeholder keeps the layout space in the hero section.
-//
-// KEY FIX FOR "GOES TO TOP FIRST":
-//   When the user scrolls the placeholder out of view, we use the imperative
-//   DOM API to INSTANTLY teleport the iframe to the mini position (transition:none),
-//   THEN re-enable transitions in the next animation frame before updating React
-//   state. This means React's style recalc sees the iframe already at the correct
-//   position and no animated travel occurs.
-//
 const FloatingVideo = () => {
   const placeholderRef = useRef<HTMLDivElement>(null);
   const iframeRef      = useRef<HTMLIFrameElement>(null);
-  const [isMini, setIsMini] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const iframeReady    = useRef(false);
+
+  const [isMini, setIsMini]   = useState(false);
+  const [hidden, setHidden]   = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [heroRect, setHeroRect] = useState<DOMRect | null>(null);
 
-  // Re-measure the placeholder's screen position on scroll/resize
-  const measure = () => {
+  const measure = useCallback(() => {
     if (placeholderRef.current)
       setHeroRect(placeholderRef.current.getBoundingClientRect());
-  };
+  }, []);
+
   useEffect(() => {
     measure();
     window.addEventListener("resize", measure);
@@ -159,38 +166,49 @@ const FloatingVideo = () => {
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure);
     };
-  }, []);
+  }, [measure]);
 
-  // Watch whether the placeholder is visible
+  const toggleMute = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !iframeReady.current) return;
+
+    if (isMuted) {
+      sendYTCommand(iframe, "unMute");
+      sendYTCommand(iframe, "setVolume");
+      iframe.contentWindow?.postMessage(
+        JSON.stringify({ event: "command", func: "setVolume", args: [100] }),
+        "https://www.youtube.com"
+      );
+    } else {
+      sendYTCommand(iframe, "mute");
+    }
+    setIsMuted((prev) => !prev);
+  }, [isMuted]);
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) {
-          // ── Placeholder left view → go mini ──────────────────────────────
-          // Step 1: INSTANTLY write mini position to the DOM with NO transition.
-          //         The browser paints the iframe at top-right before any animation.
           const el = iframeRef.current;
           if (el) {
-            const iframeH = MINI_VH + CROP_TOP + CROP_BOT;
+            const { vw, vh } = getMiniDimensions();
+            const iframeH  = vh + CROP_TOP + CROP_BOT;
+            const miniLeft = window.innerWidth - vw - MINI_RIGHT;
             el.style.transition    = "none";
             el.style.top           = `${MINI_TOP - CROP_TOP}px`;
-            el.style.left          = `calc(100vw - ${MINI_VW + MINI_RIGHT}px)`;
-            el.style.width         = `${MINI_VW}px`;
+            el.style.left          = `${miniLeft}px`;
+            el.style.width         = `${vw}px`;
             el.style.height        = `${iframeH}px`;
             el.style.opacity       = "1";
             el.style.clipPath      = `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`;
             el.style.boxShadow     = "0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,222,128,0.25)";
             el.style.pointerEvents = "auto";
           }
-          // Step 2: After ONE paint frame, re-enable transitions and tell React.
-          //         From this point any further style changes (e.g. resizing back
-          //         to hero) will animate smoothly.
           requestAnimationFrame(() => {
             if (el) el.style.transition = TRANS;
             setIsMini(true);
           });
         } else {
-          // ── Placeholder back in view → restore hero ───────────────────────
           setIsMini(false);
           setHidden(false);
         }
@@ -201,73 +219,66 @@ const FloatingVideo = () => {
     return () => obs.disconnect();
   }, []);
 
-  // YouTube src — loop=1 + playlist= required for looping in embeds
   const VIDEO_ID = "gcX8ncx0f00";
-  const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&enablejsapi=1&playsinline=1`;
+  const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&enablejsapi=1&playsinline=1&origin=${typeof window !== "undefined" ? window.location.origin : ""}`;
 
-  // React-controlled style — used for hero mode and hidden/parked state.
-  // Mini mode is handled imperatively above; React just keeps state in sync.
+  const { vw: MINI_VW, vh: MINI_VH } = getMiniDimensions();
+  const miniLeftPx = typeof window !== "undefined"
+    ? window.innerWidth - MINI_VW - MINI_RIGHT
+    : 0;
+
   const getIframeStyle = (): React.CSSProperties => {
-    const miniTop  = MINI_TOP - CROP_TOP;
-    const miniLeft = `calc(100vw - ${MINI_VW + MINI_RIGHT}px)`;
-    const miniH    = MINI_VH + CROP_TOP + CROP_BOT;
-    const miniClip = `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`;
+    const miniTopPx = MINI_TOP - CROP_TOP;
+    const miniH     = MINI_VH + CROP_TOP + CROP_BOT;
+    const miniClip  = `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`;
 
-    // Hero mode
     if (!isMini && heroRect) {
       return {
-        position: "fixed",
-        zIndex: 9999,
-        border: "none",
-        transition: TRANS,
-        pointerEvents: "auto",
-        opacity: 1,
-        top: heroRect.top - CROP_TOP,
-        left: heroRect.left,
-        width: heroRect.width,
-        height: heroRect.height + CROP_TOP + CROP_BOT,
+        position: "fixed", zIndex: 9999, border: "none",
+        transition: TRANS, pointerEvents: "auto", opacity: 1,
+        top: heroRect.top - CROP_TOP, left: heroRect.left,
+        width: heroRect.width, height: heroRect.height + CROP_TOP + CROP_BOT,
         clipPath: `inset(${CROP_TOP}px 0px ${CROP_BOT}px 0px round 12px)`,
         boxShadow: "0 20px 60px -10px rgba(34,197,94,0.3)",
       };
     }
-
-    // Mini mode (visible) — matches what we wrote imperatively above
     if (isMini && !hidden) {
       return {
-        position: "fixed",
-        zIndex: 9999,
-        border: "none",
-        transition: TRANS,
-        pointerEvents: "auto",
-        opacity: 1,
-        top: miniTop,
-        left: miniLeft,
-        width: MINI_VW,
-        height: miniH,
+        position: "fixed", zIndex: 9999, border: "none",
+        transition: TRANS, pointerEvents: "auto", opacity: 1,
+        top: miniTopPx, left: miniLeftPx,
+        width: MINI_VW, height: miniH,
         clipPath: miniClip,
         boxShadow: "0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,222,128,0.25)",
       };
     }
-
-    // Hidden / parked — sits at mini position but invisible, no spatial jump
     return {
-      position: "fixed",
-      zIndex: 9999,
-      border: "none",
-      transition: "opacity 0.2s ease",
-      pointerEvents: "none",
-      opacity: 0,
-      top: miniTop,
-      left: miniLeft,
-      width: MINI_VW,
-      height: miniH,
-      clipPath: miniClip,
+      position: "fixed", zIndex: 9999, border: "none",
+      transition: "opacity 0.2s ease", pointerEvents: "none", opacity: 0,
+      top: miniTopPx, left: miniLeftPx,
+      width: MINI_VW, height: miniH, clipPath: miniClip,
     };
+  };
+
+  const getMuteButtonStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      position: "fixed",
+      zIndex: 10001,
+      pointerEvents: "auto",
+      transform: "translateX(-50%)",
+    };
+    if (!isMini && heroRect) {
+      return { ...base, top: heroRect.bottom - 40, left: heroRect.left + heroRect.width / 2 };
+    }
+    if (isMini && !hidden) {
+      return { ...base, top: MINI_TOP + MINI_VH - 40, left: miniLeftPx + MINI_VW / 2 };
+    }
+    return { ...base, display: "none" };
   };
 
   return (
     <>
-      {/* Invisible placeholder — keeps layout space in the hero */}
+      {/* Invisible placeholder */}
       <div
         ref={placeholderRef}
         style={{ width: "100%", aspectRatio: "16/10", minHeight: "300px", visibility: "hidden" }}
@@ -281,25 +292,59 @@ const FloatingVideo = () => {
         title="Tasmia Khan Portfolio"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        onLoad={() => { iframeReady.current = true; }}
       />
 
-      {/* Close button — inset inside top-right corner of mini video */}
+      {/* ── Mute button — pinned to bottom-center of video, tracks on scroll ── */}
+      {!hidden && getMuteButtonStyle().display !== "none" && (
+        <button
+          onClick={toggleMute}
+          style={{
+            ...getMuteButtonStyle(),
+            display: "flex", alignItems: "center", gap: "6px",
+            background: isMuted ? "rgba(255,255,255,0.12)" : "rgba(74,222,128,0.2)",
+            border: isMuted ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(74,222,128,0.6)",
+            color: isMuted ? "#d1d5db" : "#4ade80",
+            fontSize: "11px", fontWeight: 600,
+            padding: "5px 12px", borderRadius: "20px",
+            cursor: "pointer", letterSpacing: "0.04em",
+            backdropFilter: "blur(6px)",
+            transition: "top 0.45s cubic-bezier(0.4,0,0.2,1), left 0.45s cubic-bezier(0.4,0,0.2,1), background 0.2s ease, border 0.2s ease",
+            whiteSpace: "nowrap",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = isMuted ? "rgba(255,255,255,0.22)" : "rgba(74,222,128,0.35)";
+            (e.currentTarget as HTMLButtonElement).style.transform = "translateX(-50%) scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = isMuted ? "rgba(255,255,255,0.12)" : "rgba(74,222,128,0.2)";
+            (e.currentTarget as HTMLButtonElement).style.transform = "translateX(-50%) scale(1)";
+          }}
+          aria-label={isMuted ? "Unmute video" : "Mute video"}
+        >
+          {isMuted
+            ? <><FaVolumeMute style={{ fontSize: "12px" }} /> Click to Unmute</>
+            : <><FaVolumeUp   style={{ fontSize: "12px" }} /> Muted</>
+          }
+        </button>
+      )}
+
+      {/* Close button — mini mode only */}
       {isMini && !hidden && (
         <button
           onClick={() => setHidden(true)}
           style={{
             position: "fixed",
-            top:   MINI_TOP + CLOSE_INSET,
+            top: MINI_TOP + CLOSE_INSET,
             right: MINI_RIGHT + CLOSE_INSET,
-            zIndex: 10000,
-            width:  `${MINI_CLOSE_SZ}px`,
+            zIndex: 10002,
+            width: `${MINI_CLOSE_SZ}px`,
             height: `${MINI_CLOSE_SZ}px`,
             borderRadius: "50%",
             background: "rgba(17,24,39,0.85)",
             border: "1px solid rgba(74,222,128,0.4)",
             color: "#e5e7eb",
             fontSize: "18px",
-            lineHeight: "1",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
@@ -360,6 +405,10 @@ const HeroSection = () => {
           from { transform: rotate(45deg); }
           to   { transform: rotate(405deg); }
         }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.3; }
+        }
         .animate-wave1 { animation: wave1 12s ease-in-out infinite; }
         .animate-wave2 { animation: wave2 10s ease-in-out infinite; }
         .animate-wave3 { animation: wave3 15s ease-in-out infinite; }
@@ -381,7 +430,6 @@ const HeroSection = () => {
       <WavyLines />
       <MatrixRain />
 
-      {/* Ambient glows */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-20 left-10 w-40 h-40 rounded-full bg-green-400 blur-3xl animate-pulse" />
         <div className="absolute bottom-20 right-10 w-60 h-60 rounded-full bg-blue-500 blur-3xl animate-pulse" />
@@ -389,7 +437,6 @@ const HeroSection = () => {
         <div className="absolute bottom-40 left-20 w-48 h-48 rounded-full bg-teal-400 blur-3xl animate-pulse" />
       </div>
 
-      {/* Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
@@ -409,7 +456,6 @@ const HeroSection = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-5 md:pt-24">
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-8 md:gap-12">
 
-          {/* Left content */}
           <motion.div
             className="w-full md:w-3/5 mt-10 md:mt-0"
             initial="hidden"
@@ -443,10 +489,10 @@ const HeroSection = () => {
 
             <motion.div variants={itemVariants} className="flex gap-4">
               {[
-                { href: "https://github.com/KTasmi",                          icon: <FaGithub   className="text-xl" />, label: "GitHub",    cls: "from-gray-700 to-gray-800 hover:from-green-400 hover:to-emerald-600 border-gray-600 hover:border-green-400/50 hover:shadow-green-500/30" },
-                { href: "https://www.linkedin.com/in/KhanTasmia/",            icon: <FaLinkedin className="text-xl" />, label: "LinkedIn",  cls: "from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 border-blue-500 hover:border-blue-400/50 hover:shadow-blue-500/30" },
-                { href: "https://wa.me/+8801621296671",                        icon: <FaWhatsapp className="text-xl" />, label: "WhatsApp", cls: "from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-green-600 hover:border-green-500/50 hover:shadow-green-500/30" },
-                { href: "https://www.facebook.com/share/1CsxTi79hD/",        icon: <FaFacebook className="text-xl" />, label: "Facebook",  cls: "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-600 hover:border-blue-500/50 hover:shadow-blue-600/30" },
+                { href: "https://github.com/KTasmi",                   icon: <FaGithub   className="text-xl" />, label: "GitHub",   cls: "from-gray-700 to-gray-800 hover:from-green-400 hover:to-emerald-600 border-gray-600 hover:border-green-400/50 hover:shadow-green-500/30" },
+                { href: "https://www.linkedin.com/in/KhanTasmia/",     icon: <FaLinkedin className="text-xl" />, label: "LinkedIn", cls: "from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 border-blue-500 hover:border-blue-400/50 hover:shadow-blue-500/30" },
+                { href: "https://wa.me/+8801621296671",                 icon: <FaWhatsapp className="text-xl" />, label: "WhatsApp",cls: "from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-green-600 hover:border-green-500/50 hover:shadow-green-500/30" },
+                { href: "https://www.facebook.com/share/1CsxTi79hD/", icon: <FaFacebook className="text-xl" />, label: "Facebook", cls: "from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-600 hover:border-blue-500/50 hover:shadow-blue-600/30" },
               ].map(({ href, icon, label, cls }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                   className={`flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br ${cls} text-gray-300 hover:text-white border transition-all duration-300 shadow-lg transform hover:-translate-y-1`}>
@@ -456,7 +502,6 @@ const HeroSection = () => {
             </motion.div>
           </motion.div>
 
-          {/* Right: video placeholder */}
           <motion.div
             className="w-full md:w-2/5 flex justify-center mt-16 md:mt-0 relative"
             initial="hidden"
