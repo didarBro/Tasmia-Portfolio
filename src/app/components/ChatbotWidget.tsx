@@ -80,7 +80,7 @@ const ChatbotWidget = () => {
       <button
         type="button"
         onClick={isOpen ? handleToggle : handleOpen}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-[#1f2937] bg-[#050505]/90 text-[#e5e7eb] shadow-lg shadow-black/40 backdrop-blur-sm transition hover:scale-105 hover:border-[#22c55e]/60 hover:text-[#bbf7d0] md:bottom-8 md:right-8"
+        className="fixed bottom-20 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-[#1f2937] bg-[#050505]/90 text-[#e5e7eb] shadow-lg shadow-black/40 backdrop-blur-sm transition hover:scale-105 hover:border-[#22c55e]/60 hover:text-[#bbf7d0] md:bottom-20 md:right-8"
         aria-label={isOpen ? "Close portfolio assistant" : "Open portfolio assistant"}
       >
         <MessageCircle className="h-5 w-5" />
