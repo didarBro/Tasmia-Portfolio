@@ -7,8 +7,6 @@ import {
   FaLinkedin,
   FaFacebook,
   FaWhatsapp,
-  FaVolumeMute,
-  FaVolumeUp,
 } from "react-icons/fa";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -109,12 +107,12 @@ const MatrixRain = () => {
 };
 
 // ── Video constants ───────────────────────────────────────────────────────────
-const CROP_TOP     = 60;
-const CROP_BOT     = 50;
-const MINI_RIGHT   = 12;
-const MINI_TOP     = 80;
+const CROP_TOP      = 60;
+const CROP_BOT      = 50;
+const MINI_RIGHT    = 12;
+const MINI_TOP      = 80;
 const MINI_CLOSE_SZ = 28;
-const CLOSE_INSET  = 8;
+const CLOSE_INSET   = 8;
 
 const getMiniDimensions = () => {
   if (typeof window === "undefined") return { vw: 360, vh: 202 };
@@ -135,24 +133,25 @@ const TRANS = [
 ].join(", ");
 
 // ── Send postMessage to YouTube iframe ───────────────────────────────────────
-const sendYTCommand = (iframe: HTMLIFrameElement, func: string) => {
+const sendYTCommand = (iframe: HTMLIFrameElement, func: string, args: unknown[] = []) => {
   iframe.contentWindow?.postMessage(
-    JSON.stringify({ event: "command", func, args: [] }),
+    JSON.stringify({ event: "command", func, args }),
     "https://www.youtube.com"
   );
 };
 
 // ── FloatingVideo ─────────────────────────────────────────────────────────────
 const FloatingVideo = () => {
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  const iframeRef      = useRef<HTMLIFrameElement>(null);
-  const iframeReady    = useRef(false);
+  const placeholderRef  = useRef<HTMLDivElement>(null);
+  const iframeRef       = useRef<HTMLIFrameElement>(null);
+  const iframeReady     = useRef(false);
+  const autoUnmutedRef  = useRef(false);
 
-  const [isMini, setIsMini]   = useState(false);
-  const [hidden, setHidden]   = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMini, setIsMini]     = useState(false);
+  const [hidden, setHidden]     = useState(false);
   const [heroRect, setHeroRect] = useState<DOMRect | null>(null);
 
+  // ── Measure placeholder position (drives the hero-mode iframe position) ──
   const measure = useCallback(() => {
     if (placeholderRef.current)
       setHeroRect(placeholderRef.current.getBoundingClientRect());
@@ -168,23 +167,40 @@ const FloatingVideo = () => {
     };
   }, [measure]);
 
-  const toggleMute = useCallback(() => {
-    const iframe = iframeRef.current;
-    if (!iframe || !iframeReady.current) return;
+  // ── AUTO-UNMUTE on first real user interaction ────────────────────────────
+  // Browsers block audio until a genuine user gesture occurs. We listen for
+  // the first mousemove / scroll / keydown / touchstart and silently unmute.
+  useEffect(() => {
+    const unlock = () => {
+      if (autoUnmutedRef.current) return;
+      const iframe = iframeRef.current;
+      if (!iframe || !iframeReady.current) return;
 
-    if (isMuted) {
+      autoUnmutedRef.current = true;
       sendYTCommand(iframe, "unMute");
-      sendYTCommand(iframe, "setVolume");
-      iframe.contentWindow?.postMessage(
-        JSON.stringify({ event: "command", func: "setVolume", args: [100] }),
-        "https://www.youtube.com"
-      );
-    } else {
-      sendYTCommand(iframe, "mute");
-    }
-    setIsMuted((prev) => !prev);
-  }, [isMuted]);
+      sendYTCommand(iframe, "setVolume", [100]);
 
+      window.removeEventListener("mousemove",  unlock);
+      window.removeEventListener("scroll",     unlock);
+      window.removeEventListener("keydown",    unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+
+    window.addEventListener("mousemove",  unlock, { passive: true });
+    window.addEventListener("scroll",     unlock, { passive: true });
+    window.addEventListener("keydown",    unlock);
+    window.addEventListener("touchstart", unlock, { passive: true });
+
+    return () => {
+      window.removeEventListener("mousemove",  unlock);
+      window.removeEventListener("scroll",     unlock);
+      window.removeEventListener("keydown",    unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Mini-player on scroll away ────────────────────────────────────────────
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => {
@@ -220,12 +236,13 @@ const FloatingVideo = () => {
   }, []);
 
   const VIDEO_ID = "gcX8ncx0f00";
-  const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&enablejsapi=1&playsinline=1&origin=${typeof window !== "undefined" ? window.location.origin : ""}`;
+  const src = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${VIDEO_ID}&controls=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&enablejsapi=1&playsinline=1&origin=${
+    typeof window !== "undefined" ? window.location.origin : ""
+  }`;
 
   const { vw: MINI_VW, vh: MINI_VH } = getMiniDimensions();
-  const miniLeftPx = typeof window !== "undefined"
-    ? window.innerWidth - MINI_VW - MINI_RIGHT
-    : 0;
+  const miniLeftPx =
+    typeof window !== "undefined" ? window.innerWidth - MINI_VW - MINI_RIGHT : 0;
 
   const getIframeStyle = (): React.CSSProperties => {
     const miniTopPx = MINI_TOP - CROP_TOP;
@@ -260,25 +277,9 @@ const FloatingVideo = () => {
     };
   };
 
-  const getMuteButtonStyle = (): React.CSSProperties => {
-    const base: React.CSSProperties = {
-      position: "fixed",
-      zIndex: 10001,
-      pointerEvents: "auto",
-      transform: "translateX(-50%)",
-    };
-    if (!isMini && heroRect) {
-      return { ...base, top: heroRect.bottom - 40, left: heroRect.left + heroRect.width / 2 };
-    }
-    if (isMini && !hidden) {
-      return { ...base, top: MINI_TOP + MINI_VH - 40, left: miniLeftPx + MINI_VW / 2 };
-    }
-    return { ...base, display: "none" };
-  };
-
   return (
     <>
-      {/* Invisible placeholder */}
+      {/* Invisible placeholder — holds the hero layout space */}
       <div
         ref={placeholderRef}
         style={{ width: "100%", aspectRatio: "16/10", minHeight: "300px", visibility: "hidden" }}
@@ -292,42 +293,18 @@ const FloatingVideo = () => {
         title="Tasmia Khan Portfolio"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        onLoad={() => { iframeReady.current = true; }}
-      />
-
-      {/* ── Mute button — pinned to bottom-center of video, tracks on scroll ── */}
-      {!hidden && getMuteButtonStyle().display !== "none" && (
-        <button
-          onClick={toggleMute}
-          style={{
-            ...getMuteButtonStyle(),
-            display: "flex", alignItems: "center", gap: "6px",
-            background: isMuted ? "rgba(255,255,255,0.12)" : "rgba(74,222,128,0.2)",
-            border: isMuted ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(74,222,128,0.6)",
-            color: isMuted ? "#d1d5db" : "#4ade80",
-            fontSize: "11px", fontWeight: 600,
-            padding: "5px 12px", borderRadius: "20px",
-            cursor: "pointer", letterSpacing: "0.04em",
-            backdropFilter: "blur(6px)",
-            transition: "top 0.45s cubic-bezier(0.4,0,0.2,1), left 0.45s cubic-bezier(0.4,0,0.2,1), background 0.2s ease, border 0.2s ease",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = isMuted ? "rgba(255,255,255,0.22)" : "rgba(74,222,128,0.35)";
-            (e.currentTarget as HTMLButtonElement).style.transform = "translateX(-50%) scale(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = isMuted ? "rgba(255,255,255,0.12)" : "rgba(74,222,128,0.2)";
-            (e.currentTarget as HTMLButtonElement).style.transform = "translateX(-50%) scale(1)";
-          }}
-          aria-label={isMuted ? "Unmute video" : "Mute video"}
-        >
-          {isMuted
-            ? <><FaVolumeMute style={{ fontSize: "12px" }} /> Click to Unmute</>
-            : <><FaVolumeUp   style={{ fontSize: "12px" }} /> Muted</>
+        onLoad={() => {
+          iframeReady.current = true;
+          // If the user interacted before the iframe finished loading, unmute now
+          if (autoUnmutedRef.current) {
+            const iframe = iframeRef.current;
+            if (iframe) {
+              sendYTCommand(iframe, "unMute");
+              sendYTCommand(iframe, "setVolume", [100]);
+            }
           }
-        </button>
-      )}
+        }}
+      />
 
       {/* Close button — mini mode only */}
       {isMini && !hidden && (
